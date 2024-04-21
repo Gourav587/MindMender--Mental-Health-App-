@@ -1,0 +1,14 @@
+version: '1.0'
+
+services:
+  myapp:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/usr/src/app
+

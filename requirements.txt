@@ -1,0 +1,10 @@
+llama-index
+python-dotenv
+chromadb
+uvicorn
+fastapi
+google-generativeai
+llama-index-llms-gemini
+llama-index-embeddings-huggingface
+llama-index-vector-stores-chroma
+
