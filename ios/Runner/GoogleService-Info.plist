@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>273965387967-4a6h0juvn3jg78k8lngvatpk4iqpc7ja.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.273965387967-4a6h0juvn3jg78k8lngvatpk4iqpc7ja</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>273965387967-kh0ea6mnmuhr1k52mkbl50niq745qd26.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBvZubS4JVvM-rjHn0_Hk0I280mwRPhBPg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>273965387967</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.myproject</string>
+	<key>PROJECT_ID</key>
+	<string>mindmender-1dc9a</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mindmender-1dc9a.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:273965387967:ios:be2a8a42edd401fa29b60a</string>
+	<key>DATABASE_URL</key>
+	<string>https://mindmender-1dc9a-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>
