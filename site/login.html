@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="relax.html">Relax</a></nav>
+  </header>
+  <main>
+    <div class="card" style="max-width: 420px; margin: 24px auto;">
+      <h1>Welcome</h1>
+      <p class="muted">Log in to save your stress and mood history.</p>
+      <form id="form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" minlength="6" required>
+        <p id="error" class="error" role="alert"></p>
+        <button type="submit">Log in</button>
+        <button type="button" id="signup" class="secondary">Create account</button>
+      </form>
+      <p><button type="button" id="google" class="secondary">Continue with Google</button></p>
+      <p><a href="#" id="reset">Forgot password?</a></p>
+    </div>
+  </main>
+  <script type="module">
+    import { auth } from './app.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail }
+      from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+    const $ = (id) => document.getElementById(id);
+    const next = new URLSearchParams(location.search).get('next');
+    // Only follow same-site paths, never an external URL.
+    const done = () => location.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
+    const fail = (e) => { $('error').textContent = e.message.replace('Firebase: ', ''); };
+    const creds = () => [auth, $('email').value, $('password').value];
+
+    $('form').onsubmit = (e) => { e.preventDefault(); signInWithEmailAndPassword(...creds()).then(done, fail); };
+    $('signup').onclick = () => { if ($('form').reportValidity()) createUserWithEmailAndPassword(...creds()).then(done, fail); };
+    $('google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).then(done, fail);
+    $('reset').onclick = (e) => {
+      e.preventDefault();
+      if (!$('email').value) return fail({ message: 'Enter your email first.' });
+      sendPasswordResetEmail(auth, $('email').value).then(() => { $('error').textContent = 'Reset link sent. Check your inbox.'; }, fail);
+    };
+  </script>
+</body>
+</html>

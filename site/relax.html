@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relax · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="chat.html">Chat</a><a href="stress.html">Stress test</a><a href="social.html">Social media</a><a href="mood.html">Mood</a><a href="relax.html">Relax</a><a id="auth" href="login.html">Log in</a></nav>
+  </header>
+  <main>
+    <h1>Relax</h1>
+
+    <div class="card">
+      <h2>Box breathing</h2>
+      <p class="muted">Breathe in for 4, hold for 4, out for 4, hold for 4. Four rounds take about a minute.</p>
+      <div class="breath-wrap"><div id="circle" class="breath" aria-live="polite">Ready</div></div>
+      <button id="toggle">Start</button>
+    </div>
+
+    <div class="card">
+      <h2>5-4-3-2-1 grounding</h2>
+      <p class="muted">When your thoughts are racing, bring yourself back to the present. Slowly notice:</p>
+      <ol>
+        <li><strong>5</strong> things you can see</li>
+        <li><strong>4</strong> things you can touch</li>
+        <li><strong>3</strong> things you can hear</li>
+        <li><strong>2</strong> things you can smell</li>
+        <li><strong>1</strong> thing you can taste</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Quick things that help</h2>
+      <ul>
+        <li>Drink a glass of water and stretch your neck and shoulders.</li>
+        <li>Step outside or look out a window for two minutes.</li>
+        <li>Write down what's worrying you, then one small next step.</li>
+        <li>Put your phone away for 15 minutes.</li>
+        <li>Text or call someone you trust.</li>
+        <li>Try to keep a regular sleep time tonight.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>
+    In crisis? India: Tele-MANAS 14416 · KIRAN 1800-599-0019 · US: 988 · Elsewhere: <a href="https://findahelpline.com">findahelpline.com</a>
+  </footer>
+  <script>
+    const circle = document.getElementById('circle');
+    const toggle = document.getElementById('toggle');
+    const PHASES = ['Breathe in', 'Hold', 'Breathe out', 'Hold'];
+    let timer;
+    toggle.onclick = () => {
+      if (timer) {
+        clearInterval(timer); timer = null;
+        circle.classList.remove('on'); circle.textContent = 'Ready'; toggle.textContent = 'Start';
+        return;
+      }
+      let i = 0;
+      circle.textContent = PHASES[0];
+      circle.classList.add('on');
+      toggle.textContent = 'Stop';
+      timer = setInterval(() => { circle.textContent = PHASES[++i % 4]; }, 4000);
+    };
+  </script>
+</body>
+</html>

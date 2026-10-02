@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stress Test · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="chat.html">Chat</a><a href="stress.html">Stress test</a><a href="social.html">Social media</a><a href="mood.html">Mood</a><a href="relax.html">Relax</a><a id="auth" href="login.html">Log in</a></nav>
+  </header>
+  <main>
+    <h1>Stress test</h1>
+    <p class="muted">The Perceived Stress Scale (PSS-10). Think about the <strong>last month</strong> and pick how often each applied to you. It's a self-check, not a diagnosis.</p>
+    <form id="form">
+      <div id="questions"></div>
+      <button>See my result</button>
+    </form>
+    <div id="result" class="card" hidden aria-live="polite"></div>
+    <div class="card">
+      <h2>Past results</h2>
+      <ul id="past"><li class="muted">Loading…</li></ul>
+    </div>
+  </main>
+  <script type="module">
+    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { PSS_QUESTIONS, PSS_OPTIONS, pssScore } from './scoring.js';
+    await requireLogin();
+
+    const ADVICE = {
+      low: 'Your stress level looks low. Keep doing what works for you.',
+      moderate: 'You are carrying a moderate amount of stress. A few minutes of <a href="relax.html">breathing or grounding</a> each day can help, and so can <a href="chat.html">talking it through</a>.',
+      high: 'Your stress level looks high. Please be kind to yourself: try the <a href="relax.html">relax exercises</a>, and consider talking to a counsellor or doctor. If you ever feel unsafe, call Tele-MANAS 14416 (India) or 988 (US).',
+    };
+
+    const answers = questionnaire(document.getElementById('questions'), PSS_QUESTIONS, PSS_OPTIONS, 'In the last month, how often have you ');
+    const past = document.getElementById('past');
+
+    async function showHistory() {
+      const rows = await history('stress', 10);
+      past.innerHTML = rows.length
+        ? rows.map((r) => `<li>${new Date(r.ts).toLocaleDateString()}: <strong>${r.score}/40</strong> (${r.band})</li>`).join('')
+        : '<li class="muted">No results yet.</li>';
+    }
+
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault();
+      const { score, band } = pssScore(answers());
+      const result = document.getElementById('result');
+      result.hidden = false;
+      result.innerHTML = `<h2>Your score: ${score} / 40 (${band} stress)</h2><p>${ADVICE[band]}</p>`;
+      result.scrollIntoView({ behavior: 'smooth' });
+      await save('stress', { score, band });
+      showHistory();
+    };
+    showHistory();
+  </script>
+</body>
+</html>

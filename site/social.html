@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Social Media Check · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="chat.html">Chat</a><a href="stress.html">Stress test</a><a href="social.html">Social media</a><a href="mood.html">Mood</a><a href="relax.html">Relax</a><a id="auth" href="login.html">Log in</a></nav>
+  </header>
+  <main>
+    <h1>Social media &amp; mental health check</h1>
+    <p class="muted">13 questions about how social media fits into your life, covering attention, anxiety, self-esteem and mood. Based on a 2022 study of 480 people. It's a self-check, not a diagnosis.</p>
+    <form id="form">
+      <div id="questions"></div>
+      <button>See my result</button>
+    </form>
+    <div id="result" class="card" hidden aria-live="polite"></div>
+    <div class="card">
+      <h2>Past results</h2>
+      <ul id="past"><li class="muted">Loading…</li></ul>
+    </div>
+  </main>
+  <script type="module">
+    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { SM_QUESTIONS, SM_OPTIONS, SM_TIME_OPTIONS, SM_AREA_MAX, smScore } from './scoring.js';
+    await requireLogin();
+
+    const LABELS = { adhd: 'Attention & focus', anxiety: 'Anxiety', selfEsteem: 'Self-esteem', depression: 'Low mood' };
+    const answers = questionnaire(document.getElementById('questions'),
+      [['On average, how much time do you spend on social media each day?', SM_TIME_OPTIONS], ...SM_QUESTIONS], SM_OPTIONS);
+    const past = document.getElementById('past');
+
+    async function showHistory() {
+      const rows = await history('social', 10);
+      past.innerHTML = rows.length
+        ? rows.map((r) => `<li>${new Date(r.ts).toLocaleDateString()}: <strong>${r.total}/59</strong>${r.checkup ? ' (checkup suggested)' : ''}</li>`).join('')
+        : '<li class="muted">No results yet.</li>';
+    }
+
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault();
+      const [time, ...rest] = answers();
+      const { areas, total, checkup } = smScore(rest.map((a) => a + 1));
+      const result = document.getElementById('result');
+      result.hidden = false;
+      result.innerHTML = `<h2>Your score: ${total} / 59</h2>`
+        + Object.entries(areas).map(([k, v]) =>
+          `<label>${LABELS[k]}: ${v} / ${SM_AREA_MAX[k]}<meter value="${v}" max="${SM_AREA_MAX[k]}" style="width:100%"></meter></label>`).join('')
+        + (checkup
+          ? '<p>Your answers suggest you may be dealing with noticeable symptoms. We recommend <strong>talking to a mental health professional</strong> for a proper check-up. If you ever feel unsafe, call Tele-MANAS 14416 (India) or 988 (US).</p>'
+          : '<p>Your answers don\'t point to severe symptoms. Keep an eye on the areas that scored higher.</p>')
+        + (time >= 3
+          ? '<p class="muted">You spend 3+ hours a day on social media. In the study, more time online went with higher attention and anxiety scores. A short break or <a href="relax.html">breathing exercise</a> might help.</p>'
+          : '');
+      result.scrollIntoView({ behavior: 'smooth' });
+      await save('social', { total, checkup, areas, time });
+      showHistory();
+    };
+    showHistory();
+  </script>
+</body>
+</html>

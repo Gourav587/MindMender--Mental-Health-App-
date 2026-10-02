@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="chat.html">Chat</a><a href="stress.html">Stress test</a><a href="social.html">Social media</a><a href="mood.html">Mood</a><a href="relax.html">Relax</a><a id="auth" href="login.html">Log in</a></nav>
+  </header>
+  <main>
+    <h1>Chat</h1>
+    <p class="muted">An AI listener, not a therapist. Please don't share anything you wouldn't want stored by an AI service.</p>
+    <div id="messages" aria-live="polite">
+      <div class="msg bot">Hi, I'm here to listen. What's on your mind today?</div>
+    </div>
+    <form id="chat-form">
+      <input id="input" aria-label="Your message" placeholder="Type how you're feeling…" maxlength="2000" autocomplete="off" required>
+      <button id="send">Send</button>
+    </form>
+  </main>
+  <script type="module">
+    import { requireLogin } from './app.js';
+    await requireLogin();
+
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+
+    function add(text, who) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.textContent = text;
+      messages.append(div);
+      div.scrollIntoView({ block: 'end' });
+      return div;
+    }
+
+    document.getElementById('chat-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      add(message, 'me');
+      input.value = '';
+      send.disabled = true;
+      const pending = add('…', 'bot');
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        });
+        if (!res.ok) throw new Error(res.status);
+        pending.textContent = (await res.json()).reply;
+      } catch {
+        pending.textContent = "Sorry, I couldn't reach the server. Please try again in a moment.";
+      }
+      send.disabled = false;
+      input.focus();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mood · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
+    <nav><a href="chat.html">Chat</a><a href="stress.html">Stress test</a><a href="social.html">Social media</a><a href="mood.html">Mood</a><a href="relax.html">Relax</a><a id="auth" href="login.html">Log in</a></nav>
+  </header>
+  <main>
+    <h1>Mood</h1>
+
+    <form id="checkin" class="card">
+      <h2>How are you feeling today?</h2>
+      <div class="options emoji">
+        <label><input type="radio" name="mood" value="1" required><span title="Awful">😞</span></label>
+        <label><input type="radio" name="mood" value="2"><span title="Low">🙁</span></label>
+        <label><input type="radio" name="mood" value="3"><span title="Okay">😐</span></label>
+        <label><input type="radio" name="mood" value="4"><span title="Good">🙂</span></label>
+        <label><input type="radio" name="mood" value="5"><span title="Great">😄</span></label>
+      </div>
+      <label for="note">Anything on your mind? (optional)</label>
+      <textarea id="note" rows="2" maxlength="500"></textarea>
+      <p><button>Save check-in</button> <span id="saved" class="muted" aria-live="polite"></span></p>
+    </form>
+
+    <div class="card">
+      <h2>Your mood over time</h2>
+      <p id="summary" class="muted">Loading…</p>
+      <canvas id="chart" height="200" aria-label="Mood over time chart" role="img"></canvas>
+      <ul id="notes"></ul>
+    </div>
+
+    <h2>Wellbeing check (WHO-5)</h2>
+    <p class="muted">Over the <strong>last two weeks</strong>, how often did each apply? Takes about a minute. It's a self-check, not a diagnosis.</p>
+    <form id="who5">
+      <div id="questions"></div>
+      <button>See my wellbeing score</button>
+    </form>
+    <div id="who5-result" class="card" hidden aria-live="polite"></div>
+  </main>
+  <script type="module">
+    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { WHO5_QUESTIONS, WHO5_OPTIONS, who5Score } from './scoring.js';
+    await requireLogin();
+
+    const FACES = ['', '😞', '🙁', '😐', '🙂', '😄'];
+    const $ = (id) => document.getElementById(id);
+    const css = getComputedStyle(document.documentElement);
+    let chart;
+
+    async function showMood() {
+      const rows = (await history('mood', 30)).reverse();
+      if (!rows.length) { $('summary').textContent = 'No check-ins yet. Log your first one above.'; return; }
+
+      const week = rows.slice(-7);
+      const avg = week.reduce((s, r) => s + r.mood, 0) / week.length;
+      const prev = rows.slice(-14, -7);
+      let trend = '';
+      if (prev.length) {
+        const prevAvg = prev.reduce((s, r) => s + r.mood, 0) / prev.length;
+        trend = avg > prevAvg + 0.3 ? ' Trending up compared with before.' : avg < prevAvg - 0.3 ? ' A bit lower than before. Be gentle with yourself.' : ' Fairly steady.';
+      }
+      $('summary').textContent = `Average of your last ${week.length} check-ins: ${avg.toFixed(1)} / 5 ${FACES[Math.round(avg)]}.${trend}`;
+
+      chart?.destroy();
+      chart = new Chart($('chart'), {
+        type: 'line',
+        data: {
+          labels: rows.map((r) => new Date(r.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
+          datasets: [{ data: rows.map((r) => r.mood), borderColor: css.getPropertyValue('--accent'), tension: 0.3 }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 1, max: 5, ticks: { stepSize: 1, callback: (v) => FACES[v] }, grid: { color: css.getPropertyValue('--border') } },
+            x: { ticks: { color: css.getPropertyValue('--muted') }, grid: { display: false } },
+          },
+        },
+      });
+
+      $('notes').replaceChildren(...rows.filter((r) => r.note).slice(-5).reverse().map((r) => {
+        const li = document.createElement('li');
+        li.textContent = `${new Date(r.ts).toLocaleDateString()} ${FACES[r.mood]} ${r.note}`;
+        return li;
+      }));
+    }
+
+    $('checkin').onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      await save('mood', { mood: Number(form.mood.value), note: $('note').value.trim() });
+      form.reset();
+      $('saved').textContent = 'Saved.';
+      showMood();
+    };
+
+    const ADVICE = {
+      good: 'Your wellbeing looks good. Keep it up!',
+      low: 'Your wellbeing is on the low side. Small things help: the <a href="relax.html">relax exercises</a>, time outside, or <a href="chat.html">talking it through</a>. If it stays low for a few weeks, consider seeing a doctor or counsellor.',
+      'very low': 'Your wellbeing score is quite low. We gently suggest talking to a doctor or counsellor; you don\'t have to handle this alone. If you ever feel unsafe, call Tele-MANAS 14416 (India) or 988 (US).',
+    };
+    const answers = questionnaire($('questions'), WHO5_QUESTIONS, WHO5_OPTIONS);
+    $('who5').onsubmit = async (e) => {
+      e.preventDefault();
+      const { score, band } = who5Score(answers());
+      const prev = (await history('wellbeing', 1))[0];
+      $('who5-result').hidden = false;
+      $('who5-result').innerHTML = `<h2>Wellbeing: ${score} / 100</h2><p>${ADVICE[band]}</p>`
+        + (prev ? `<p class="muted">Last time: ${prev.score} / 100 on ${new Date(prev.ts).toLocaleDateString()}.</p>` : '');
+      await save('wellbeing', { score, band });
+    };
+
+    showMood();
+  </script>
+</body>
+</html>
