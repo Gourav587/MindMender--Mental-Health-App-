@@ -5,8 +5,7 @@ Run:      python train_chat.py --data separated_conversation.csv --data Amod/men
 Output:   models/chat/  (merged model + tokenizer; main.py serves it automatically when present)
 
 --data takes local .csv/.json/.jsonl/.parquet files or Hugging Face dataset ids, and can be repeated.
-Each dataset needs either a prompt/response column pair (auto-detected from common names, or set
---prompt-col/--response-col) or a "messages" column already in chat format.
+Prompt/response columns are auto-detected for the datasets below; for others pass --prompt-col/--response-col.
 """
 import argparse
 import os
@@ -22,23 +21,17 @@ SYSTEM_PROMPT = (
     "and suggest a mental health professional for anything serious."
 )
 
-# Common (prompt, response) column names in mental health datasets on the Hub.
+# (prompt, response) column names of the datasets we train on.
 COLUMN_PAIRS = [
     ("human_prompt", "assistant_output"),  # separated_conversation.csv
     ("Context", "Response"),               # Amod/mental_health_counseling_conversations
-    ("questionText", "answerText"),        # counsel-chat
-    ("question", "answer"),
-    ("input", "output"),
-    ("instruction", "output"),
-    ("prompt", "response"),
+    ("questionText", "answerText"),        # Counsel Chat
 ]
 
 
 def detect_columns(columns, prompt_col=None, response_col=None):
     if prompt_col and response_col:
         return prompt_col, response_col
-    if "messages" in columns:
-        return None
     for p, r in COLUMN_PAIRS:
         if p in columns and r in columns:
             return p, r
@@ -65,10 +58,7 @@ def load_one(source, prompt_col, response_col):
     else:
         ds = load_dataset(source, split="train")
 
-    cols = detect_columns(ds.column_names, prompt_col, response_col)
-    if cols is None:
-        return ds.select_columns(["messages"])
-    p, r = cols
+    p, r = detect_columns(ds.column_names, prompt_col, response_col)
     ds = ds.map(lambda row: {"messages": to_messages(row[p], row[r])}, remove_columns=ds.column_names)
     ds = ds.filter(lambda row: row["messages"] is not None)
     print(f"{source}: {len(ds)} conversations ({p} -> {r})")

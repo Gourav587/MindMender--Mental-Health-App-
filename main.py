@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 load_dotenv()
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-CHAT_MODEL_DIR = os.environ.get("CHAT_MODEL_DIR", "models/chat")  # written by train_chat.py
+CHAT_MODEL_DIR = "models/chat"  # written by train_chat.py
 
 # Keep in sync with SYSTEM_PROMPT in train_chat.py.
 SYSTEM_PROMPT = (

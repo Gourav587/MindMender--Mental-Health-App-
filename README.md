@@ -4,7 +4,7 @@ A mental health website where you can:
 
 - **Chat** with a supportive AI listener (Gemini + RAG over `separated_conversation.csv`)
 - **Take a stress test** using the Perceived Stress Scale (PSS-10)
-- **Check how social media affects you** with 12 questions from the "Correlation SM Mental Health" study, scored by attention, anxiety, self-esteem and low mood
+- **Check how social media affects you** with 13 questions (12 scored, plus daily time online) from the "Correlation SM Mental Health" study, scored by attention, anxiety, self-esteem and low mood
 - **Track your mood** with daily check-ins, a trend chart, and the WHO-5 wellbeing check
 - **Relax** with box breathing, 5-4-3-2-1 grounding, and quick tips
 
@@ -38,7 +38,7 @@ pip install -r requirements-train.txt
 python train_chat.py --data separated_conversation.csv --data <hf-dataset-id-or-file> [--data ...]
 ```
 
-- `--data` takes local `.csv`/`.json`/`.jsonl`/`.parquet` files or Hugging Face dataset ids, and can be repeated. Common column names (`Context`/`Response`, `question`/`answer`, `input`/`output`, ...) are detected; otherwise pass `--prompt-col` and `--response-col`.
+- `--data` takes local `.csv`/`.json`/`.jsonl`/`.parquet` files or Hugging Face dataset ids, and can be repeated. Columns are detected for `separated_conversation.csv` (`human_prompt`/`assistant_output`), Counsel Chat (`questionText`/`answerText`) and `Amod/mental_health_counseling_conversations` (`Context`/`Response`); for other data pass `--prompt-col` and `--response-col`.
 - The default base is `Qwen/Qwen2.5-0.5B-Instruct` (runs on an M-series Mac or a free Colab GPU). Use `--base Qwen/Qwen2.5-1.5B-Instruct` on a GPU for better replies.
 - The model is saved to `models/chat/`. When that folder exists, `main.py` uses it for chat and no longer needs the Gemini key. Delete it to go back to Gemini.
 - If you see a Keras/TensorFlow error, run with `USE_TF=0`.

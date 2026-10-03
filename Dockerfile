@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 
-RUN pip install --no-cache-dir -r requirements.txt --timeout=100 future
+RUN pip install --no-cache-dir -r requirements.txt --timeout=100
 
 COPY . .
 
