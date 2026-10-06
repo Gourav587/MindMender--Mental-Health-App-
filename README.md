@@ -2,11 +2,13 @@
 
 A mental health website where you can:
 
-- **Chat** with a supportive AI listener (Gemini + RAG over `separated_conversation.csv`)
-- **Take a stress test** using the Perceived Stress Scale (PSS-10)
-- **Check how social media affects you** with 13 questions (12 scored, plus daily time online) from the "Correlation SM Mental Health" study, scored by attention, anxiety, self-esteem and low mood
+- **Chat** with a supportive AI listener (our fine-tuned model, or Gemini + RAG over `separated_conversation.csv` as a fallback), with crisis detection and a safety filter on replies
+- **Take self-checks**: depression (PHQ-9), anxiety (GAD-7), stress (PSS-10), and a 13-question social media check scored by attention, anxiety, self-esteem and low mood
 - **Track your mood** with daily check-ins, a trend chart, and the WHO-5 wellbeing check
 - **Relax** with box breathing, 5-4-3-2-1 grounding, and quick tips
+- **Find answers** in the FAQ, Privacy Policy and Terms, or search the whole site (press `/`)
+
+Every page has dark mode, a mobile menu, a "Get help" button with crisis helplines, and print styles for sharing results with a doctor.
 
 Built with plain HTML/CSS/JS (`site/`), FastAPI (`main.py`), and Firebase Auth + Firestore for accounts and history.
 
