@@ -9,18 +9,12 @@ Prompt/response columns are auto-detected for the datasets below; for others pas
 """
 import argparse
 import os
-import re
 import sys
+
+from safety import SYSTEM_PROMPT, clean_response
 
 # transformers 5's threaded weight loading segfaults on macOS; load sequentially.
 os.environ.setdefault("HF_DEACTIVATE_ASYNC_LOAD", "1")
-
-# Keep in sync with SYSTEM_PROMPT in main.py so the model sees the same instructions it was trained with.
-SYSTEM_PROMPT = (
-    "You are MindMender, a warm and supportive listener for mental health and stress. "
-    "You are not a therapist: never diagnose or prescribe. Keep replies short and kind, "
-    "and suggest a mental health professional for anything serious."
-)
 
 # (prompt, response) column names of the datasets we train on.
 COLUMN_PAIRS = [
@@ -37,33 +31,6 @@ def detect_columns(columns, prompt_col=None, response_col=None):
         if p in columns and r in columns:
             return p, r
     raise ValueError(f"Can't tell which columns are prompt/response in {columns}; pass --prompt-col and --response-col")
-
-
-# Sentences where a therapist advertises or speaks as a therapist ("contact me", "my clients", websites,
-# phone numbers, credentials). The bot must never claim to be a therapist or offer sessions, and crisis
-# numbers come from main.py instead. Split also catches "sentence.Next" with no space after the period.
-SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|(?<=[a-z][.!?])(?=[A-Z])")
-PROMO = re.compile("|".join([
-    r"\b(contact|call|email|e-mail|text|reach|message|visit|find) me\b", r"\bfeel free to (contact|call|email|reach)",
-    r"\b(see|work(ing)? with|session with|connect with|link to|follow up with) me\b", r"\bmany of us (offer|provide)\b",
-    r"\bI (always |often )?(encourage|tell|ask|remind|teach) (my )?clients\b",
-    r"\b(free|complimentary)\b.{0,20}\b(consultation|session)", r"\bconsultation with (me|our)\b",
-    r"\bmy (office|practice|website|site|clinic|book|blog|services|number|phone|email|clients?|caseload|profile)\b",
-    r"\bin my (practice|work|office|experience as)\b", r"\bclients? of mine\b", r"\bpeople we see\b",
-    r"\bI (offer|provide|specialize|am a licensed|am licensed|work with|have worked with|have helped|treat)\b",
-    r"\bas a (therapist|counselor|counsellor|clinician|psychologist|social worker|coach)\b",
-    r"\b(our|my) (team|center|centre|group|agency|in-house|practice|office|clinic)\b",
-    r"https?://|www\.|\b\w+\.(com|org|net|ca|co)\b", r"\(?\d{3}\)?[-. ]\d{3}[-. ]\d{4}", r"\b1-?800\b|\b800-", r"@\w+\.",
-    r"\b(LMSW|LCSW|LPC|LPCC|LMFT|LMHC|LCPC|LICSW|LMAC|NCC|CADC|MFT|Ph\.?D|Psy\.?D|M\.?Ed|MSW)\b",
-]), re.I)
-MIN_KEPT = 0.6  # drop the whole answer if cleaning removed more than 40% of it
-
-
-def clean_response(text):
-    """Remove self-promotion sentences; None if too little is left to be a good answer."""
-    text = text.strip()
-    kept = " ".join(s.strip() for s in SENTENCE_SPLIT.split(text) if s.strip() and not PROMO.search(s))
-    return kept if kept and len(kept) >= MIN_KEPT * len(text) else None
 
 
 def to_messages(prompt, response):

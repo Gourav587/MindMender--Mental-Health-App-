@@ -1,5 +1,4 @@
 import os
-import re
 
 import uvicorn
 from dotenv import load_dotenv
@@ -7,25 +6,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from safety import CRISIS, CRISIS_REPLY, SYSTEM_PROMPT, safe_reply
+
 load_dotenv()
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 CHAT_MODEL_DIR = "models/chat"  # written by train_chat.py
-
-# Keep in sync with SYSTEM_PROMPT in train_chat.py.
-SYSTEM_PROMPT = (
-    "You are MindMender, a warm and supportive listener for mental health and stress. "
-    "You are not a therapist: never diagnose or prescribe. Keep replies short and kind, "
-    "and suggest a mental health professional for anything serious."
-)
-
-# ponytail: keyword match only, misses indirect phrasing; swap in an LLM classifier if that matters
-CRISIS = re.compile(r"suicid|kill myself|end my life|self[- ]?harm|hurt myself|want to die|cut myself", re.I)
-CRISIS_REPLY = (
-    "I'm really sorry you're feeling this way. You deserve support right now, and talking to a person can help. "
-    "Please reach out to a helpline: India: Tele-MANAS 14416 or KIRAN 1800-599-0019. US: call or text 988. "
-    "Elsewhere: findahelpline.com. If you're in immediate danger, call your local emergency number."
-)
 
 app = FastAPI()
 
@@ -77,7 +63,7 @@ class ChatIn(BaseModel):
 def chat(body: ChatIn):
     if CRISIS.search(body.message):
         return {"reply": CRISIS_REPLY}
-    return {"reply": answer(body.message)}
+    return {"reply": safe_reply(answer(body.message))}  # safety net: strip invented names, links, therapist claims
 
 
 app.mount("/", StaticFiles(directory="site", html=True), name="site")
