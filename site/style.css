@@ -63,6 +63,7 @@ input, textarea {
 }
 label { display: block; margin: 12px 0 4px; font-weight: 500; }
 .error { color: var(--warn); }
+.crisis { border: 2px solid var(--warn); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
 
 /* Questionnaires: one fieldset per question, options as pills */
 fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 0 0 12px; background: var(--card); }

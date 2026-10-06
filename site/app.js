@@ -15,7 +15,7 @@ export const auth = getAuth(app);
 const db = getFirestore(app);
 
 // One header for every page: add new pages here only.
-const NAV = [['chat.html', 'Chat'], ['stress.html', 'Stress test'], ['social.html', 'Social media'], ['mood.html', 'Mood'], ['relax.html', 'Relax']];
+const NAV = [['chat.html', 'Chat'], ['checks.html', 'Self-checks'], ['mood.html', 'Mood'], ['relax.html', 'Relax']];
 document.querySelector('header').innerHTML = `<a class="brand" href="/"><img src="img/logo.png" alt="">MindMender</a>
   <nav>${NAV.map(([href, text]) => `<a href="${href}"${location.pathname.endsWith('/' + href) ? ' aria-current="page"' : ''}>${text}</a>`).join('')}<a id="auth" href="login.html">Log in</a></nav>`;
 

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-check · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header></header>
+  <main>
+    <h1 id="title">Self-check</h1>
+    <p class="muted">Over the <strong>last two weeks</strong>, how often have you been bothered by each of these? It's a self-check, not a diagnosis.</p>
+    <form id="form">
+      <div id="questions"></div>
+      <button>See my result</button>
+    </form>
+    <div id="result" class="card" hidden aria-live="polite"></div>
+    <div class="card">
+      <h2>Past results</h2>
+      <ul id="past"><li class="muted">Loading…</li></ul>
+    </div>
+  </main>
+  <script type="module">
+    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { TWO_WEEK_OPTIONS, PHQ9_QUESTIONS, GAD7_QUESTIONS, phq9Score, gad7Score } from './scoring.js';
+    await requireLogin();
+
+    const CRISIS = '<div class="crisis"><strong>You said you\'ve had thoughts of being better off dead or of hurting yourself.</strong> '
+      + 'Please talk to someone now: India Tele-MANAS <a href="tel:14416">14416</a> or KIRAN <a href="tel:18005990019">1800-599-0019</a> · '
+      + 'US <a href="tel:988">988</a> · elsewhere <a href="https://findahelpline.com">findahelpline.com</a>. '
+      + 'If you are in immediate danger, call 112 (India) or your local emergency number.</div>';
+    const SEE_SOMEONE = 'Please consider talking to a doctor or counsellor; you don\'t have to handle this alone. Sharing this result with them can help.';
+    const TESTS = {
+      phq9: {
+        title: 'Depression check (PHQ-9)', questions: PHQ9_QUESTIONS, score: phq9Score, max: 27,
+        advice: {
+          minimal: 'Your answers show few or no signs of depression. Keep doing what helps you feel well.',
+          mild: 'Your answers show some signs of low mood. Small steps help: a regular sleep time, time outside, the <a href="relax.html">relax exercises</a>, or <a href="chat.html">talking it through</a>. Check again in two weeks.',
+          moderate: 'Your answers suggest moderate depression symptoms. ' + SEE_SOMEONE,
+          'moderately severe': 'Your answers suggest fairly severe depression symptoms. ' + SEE_SOMEONE,
+          severe: 'Your answers suggest severe depression symptoms. Please see a doctor or mental health professional soon. ' + SEE_SOMEONE,
+        },
+      },
+      gad7: {
+        title: 'Anxiety check (GAD-7)', questions: GAD7_QUESTIONS, score: gad7Score, max: 21,
+        advice: {
+          minimal: 'Your answers show few or no signs of anxiety. Keep doing what helps you feel calm.',
+          mild: 'Your answers show some anxiety. <a href="relax.html">Box breathing and grounding</a> can help in the moment, and so can <a href="chat.html">talking it through</a>. Check again in two weeks.',
+          moderate: 'Your answers suggest moderate anxiety symptoms. ' + SEE_SOMEONE,
+          severe: 'Your answers suggest severe anxiety symptoms. Please see a doctor or mental health professional soon. ' + SEE_SOMEONE,
+        },
+      },
+    };
+
+    const key = new URLSearchParams(location.search).get('t');
+    const test = TESTS[key] ?? TESTS.phq9;
+    const coll = TESTS[key] ? key : 'phq9';
+    document.title = `${test.title} · MindMender`;
+    document.getElementById('title').textContent = test.title;
+
+    const answers = questionnaire(document.getElementById('questions'), test.questions, TWO_WEEK_OPTIONS);
+    const past = document.getElementById('past');
+
+    async function showHistory() {
+      const rows = await history(coll, 10);
+      past.innerHTML = rows.length
+        ? rows.map((r) => `<li>${new Date(r.ts).toLocaleDateString()}: <strong>${r.score}/${test.max}</strong> (${r.band})</li>`).join('')
+        : '<li class="muted">No results yet.</li>';
+    }
+
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault();
+      const result = test.score(answers());
+      const box = document.getElementById('result');
+      box.hidden = false;
+      box.innerHTML = (result.selfHarm ? CRISIS : '')
+        + `<h2>Your score: ${result.score} / ${test.max} (${result.band})</h2><p>${test.advice[result.band]}</p>`;
+      box.scrollIntoView({ behavior: 'smooth' });
+      await save(coll, result);
+      showHistory();
+    };
+    showHistory();
+  </script>
+</body>
+</html>
