@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chat · MindMender</title>
   <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-06">
   <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
 </head>
 <body>
   <header></header>
   <main>
     <h1>Chat</h1>
-    <p class="muted">An AI listener, not a therapist. Please don't share anything you wouldn't want stored by an AI service.</p>
+    <p class="muted">An AI listener, not a therapist. It can get things wrong. Your messages aren't saved by MindMender, but avoid sharing details like your full name or address.</p>
     <div id="messages" aria-live="polite">
       <div class="msg bot">Hi, I'm here to listen. What's on your mind today?</div>
     </div>
     <form id="chat-form">
-      <input id="input" aria-label="Your message" placeholder="Type how you're feeling…" maxlength="2000" autocomplete="off" required>
+      <input id="input" aria-label="Your message" placeholder="Type how you're feeling…" maxlength="2000" autocomplete="off">
       <button id="send">Send</button>
     </form>
+    <div class="actions"><button type="button" id="clear" class="secondary">Clear chat</button></div>
   </main>
   <script type="module">
     import { requireLogin } from './app.js';
+    import { copyButton, confirmDialog } from './ui.js';
     await requireLogin();
 
     const messages = document.getElementById('messages');
@@ -44,7 +48,8 @@
       add(message, 'me');
       input.value = '';
       send.disabled = true;
-      const pending = add('…', 'bot');
+      const pending = add('', 'bot');
+      pending.innerHTML = '<span class="typing" aria-label="MindMender is typing"><span></span><span></span><span></span></span>';
       try {
         const res = await fetch('/chat', {
           method: 'POST',
@@ -52,12 +57,22 @@
           body: JSON.stringify({ message }),
         });
         if (!res.ok) throw new Error(res.status);
-        pending.textContent = (await res.json()).reply;
+        const reply = (await res.json()).reply;
+        pending.textContent = reply;
+        pending.append(copyButton(() => reply));
       } catch {
+        pending.classList.add('error');
         pending.textContent = "Sorry, I couldn't reach the server. Please try again in a moment.";
       }
       send.disabled = false;
       input.focus();
+    };
+
+    document.getElementById('clear').onclick = async () => {
+      if (await confirmDialog('Clear this conversation from the screen?', 'Clear chat')) {
+        messages.replaceChildren(messages.firstElementChild);
+        input.focus();
+      }
     };
   </script>
 </body>

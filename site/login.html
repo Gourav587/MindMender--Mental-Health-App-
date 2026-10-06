@@ -5,22 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Log in · MindMender</title>
   <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-06">
   <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
 </head>
 <body>
   <header></header>
   <main>
-    <div class="card" style="max-width: 420px; margin: 24px auto;">
+    <div class="card narrow">
       <h1>Welcome</h1>
       <p class="muted">Log in to save your stress and mood history.</p>
       <form id="form">
         <label for="email">Email</label>
         <input id="email" type="email" autocomplete="email" required>
         <label for="password">Password</label>
-        <input id="password" type="password" autocomplete="current-password" minlength="6" required>
+        <div class="pw">
+          <input id="password" type="password" autocomplete="current-password" minlength="6" required aria-describedby="pw-hint">
+          <button type="button" id="pw-toggle" class="secondary" aria-pressed="false" aria-label="Show password">Show</button>
+        </div>
+        <p id="pw-hint" class="muted"><small>At least 6 characters.</small></p>
         <p id="error" class="error" role="alert"></p>
-        <button type="submit">Log in</button>
-        <button type="button" id="signup" class="secondary">Create account</button>
+        <div class="actions">
+          <button type="submit" id="login">Log in</button>
+          <button type="button" id="signup" class="secondary">Create account</button>
+        </div>
+        <p class="muted"><small>By creating an account you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</small></p>
       </form>
       <p><button type="button" id="google" class="secondary">Continue with Google</button></p>
       <p><a href="#" id="reset">Forgot password?</a></p>
@@ -28,6 +37,7 @@
   </main>
   <script type="module">
     import { auth } from './app.js';
+    import { busy } from './ui.js';
     import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
@@ -35,16 +45,39 @@
     const next = new URLSearchParams(location.search).get('next');
     // Only follow same-site paths, never an external URL.
     const done = () => location.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
-    const fail = (e) => { $('error').textContent = e.message.replace('Firebase: ', ''); };
+    // Firebase error codes in plain words; anything unexpected falls back to Firebase's own message.
+    const MESSAGES = {
+      'auth/invalid-credential': 'That email and password don’t match. Check them or reset your password.',
+      'auth/invalid-email': 'That doesn’t look like an email address.',
+      'auth/email-already-in-use': 'There’s already an account with this email. Log in instead.',
+      'auth/weak-password': 'Please use at least 6 characters for your password.',
+      'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+      'auth/network-request-failed': 'Couldn’t reach the server. Check your connection.',
+      'auth/popup-closed-by-user': 'The Google sign-in window was closed before finishing.',
+    };
+    const fail = (e) => {
+      $('error').className = 'error';
+      $('error').textContent = MESSAGES[e.code] ?? e.message.replace('Firebase: ', '');
+    };
+    $('pw-toggle').onclick = () => {
+      const show = $('password').type === 'password';
+      $('password').type = show ? 'text' : 'password';
+      $('pw-toggle').textContent = show ? 'Hide' : 'Show';
+      $('pw-toggle').setAttribute('aria-pressed', show);
+      $('pw-toggle').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    };
     const creds = () => [auth, $('email').value, $('password').value];
 
-    $('form').onsubmit = (e) => { e.preventDefault(); signInWithEmailAndPassword(...creds()).then(done, fail); };
-    $('signup').onclick = () => { if ($('form').reportValidity()) createUserWithEmailAndPassword(...creds()).then(done, fail); };
-    $('google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).then(done, fail);
+    $('form').onsubmit = (e) => { e.preventDefault(); busy($('login'), () => signInWithEmailAndPassword(...creds()).then(done, fail)); };
+    $('signup').onclick = () => { if ($('form').reportValidity()) busy($('signup'), () => createUserWithEmailAndPassword(...creds()).then(done, fail)); };
+    $('google').onclick = () => busy($('google'), () => signInWithPopup(auth, new GoogleAuthProvider()).then(done, fail));
     $('reset').onclick = (e) => {
       e.preventDefault();
-      if (!$('email').value) return fail({ message: 'Enter your email first.' });
-      sendPasswordResetEmail(auth, $('email').value).then(() => { $('error').textContent = 'Reset link sent. Check your inbox.'; }, fail);
+      if (!$('email').value) return fail({ message: 'Enter your email above first, then click “Forgot password?” again.' });
+      sendPasswordResetEmail(auth, $('email').value).then(() => {
+        $('error').className = 'success';
+        $('error').textContent = 'Reset link sent. Check your inbox.';
+      }, fail);
     };
   </script>
 </body>
