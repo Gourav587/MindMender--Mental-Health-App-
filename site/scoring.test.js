@@ -1,6 +1,19 @@
 // Run: node site/scoring.test.js
 import assert from 'node:assert/strict';
-import { pssScore, who5Score, smScore } from './scoring.js';
+import { pssScore, who5Score, smScore, phq9Score, gad7Score } from './scoring.js';
+
+// PHQ-9: 0-27; any answer above "Not at all" on item 9 (self-harm thoughts) flags it regardless of total.
+assert.deepEqual(phq9Score(Array(9).fill(0)), { score: 0, band: 'minimal', selfHarm: false });
+assert.deepEqual(phq9Score([1, 1, 1, 1, 1, 0, 0, 0, 0]), { score: 5, band: 'mild', selfHarm: false });
+assert.deepEqual(phq9Score([2, 2, 2, 2, 2, 0, 0, 0, 0]), { score: 10, band: 'moderate', selfHarm: false });
+assert.deepEqual(phq9Score([2, 2, 2, 2, 2, 2, 2, 1, 0]), { score: 15, band: 'moderately severe', selfHarm: false });
+assert.deepEqual(phq9Score(Array(9).fill(3)), { score: 27, band: 'severe', selfHarm: true });
+assert.equal(phq9Score([0, 0, 0, 0, 0, 0, 0, 0, 1]).selfHarm, true);
+// GAD-7: 0-21.
+assert.deepEqual(gad7Score(Array(7).fill(0)), { score: 0, band: 'minimal' });
+assert.deepEqual(gad7Score([1, 1, 1, 1, 1, 0, 0]), { score: 5, band: 'mild' });
+assert.deepEqual(gad7Score([2, 2, 2, 2, 2, 0, 0]), { score: 10, band: 'moderate' });
+assert.deepEqual(gad7Score([3, 3, 3, 3, 3, 0, 0]), { score: 15, band: 'severe' });
 
 assert.deepEqual(pssScore(Array(10).fill(0)), { score: 16, band: 'moderate' });
 assert.deepEqual(pssScore([0, 0, 0, 4, 4, 0, 4, 4, 0, 0]), { score: 0, band: 'low' });

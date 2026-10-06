@@ -36,6 +36,46 @@ export function who5Score(answers) {
   return { score, band };
 }
 
+// PHQ-9 (depression) and GAD-7 (anxiety), Kroenke & Spitzer; free to use. Answers 0..3 over the last 2 weeks.
+export const TWO_WEEK_OPTIONS = ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'];
+export const PHQ9_QUESTIONS = [
+  'Little interest or pleasure in doing things',
+  'Feeling down, depressed, or hopeless',
+  'Trouble falling or staying asleep, or sleeping too much',
+  'Feeling tired or having little energy',
+  'Poor appetite or overeating',
+  'Feeling bad about yourself, or that you are a failure or have let yourself or your family down',
+  'Trouble concentrating on things, such as reading or watching television',
+  'Moving or speaking so slowly that other people could have noticed, or being so fidgety or restless that you have been moving around a lot more than usual',
+  'Thoughts that you would be better off dead, or of hurting yourself in some way',
+];
+export const GAD7_QUESTIONS = [
+  'Feeling nervous, anxious, or on edge',
+  'Not being able to stop or control worrying',
+  'Worrying too much about different things',
+  'Trouble relaxing',
+  'Being so restless that it is hard to sit still',
+  'Becoming easily annoyed or irritable',
+  'Feeling afraid, as if something awful might happen',
+];
+
+const sum = (answers) => answers.reduce((s, a) => s + a, 0);
+const band = (score, cuts) => cuts.find(([max]) => score <= max)[1];
+
+export function phq9Score(answers) {
+  const score = sum(answers);
+  return {
+    score,
+    band: band(score, [[4, 'minimal'], [9, 'mild'], [14, 'moderate'], [19, 'moderately severe'], [27, 'severe']]),
+    selfHarm: answers[8] > 0, // item 9: always show crisis support, whatever the total
+  };
+}
+
+export function gad7Score(answers) {
+  const score = sum(answers);
+  return { score, band: band(score, [[4, 'minimal'], [9, 'mild'], [14, 'moderate'], [21, 'severe']]) };
+}
+
 // Social media & mental health check, from the "Correlation SM Mental Health" study (smmh dataset, 2022).
 // Answers are 1..5. A question is either text (frequency scale) or [text, options].
 export const SM_OPTIONS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Very often'];
