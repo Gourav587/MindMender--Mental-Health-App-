@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy · MindMender</title>
+  <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-06">
+  <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header></header>
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="muted">This policy explains what MindMender collects, why, where it's kept and the choices you have. We wrote it in plain language. If anything is unclear, ask us.</p>
+
+    <h2 id="summary">In short</h2>
+    <ul>
+      <li>We only collect what the site needs to work for you.</li>
+      <li>Your check-ins and self-check results are tied to your account, and only you can read them.</li>
+      <li>Chat messages are not saved.</li>
+      <li>No ads. We don't sell or rent your data, and we don't use third-party tracking tools.</li>
+    </ul>
+
+    <h2 id="collect">What we collect</h2>
+    <h3>Your account</h3>
+    <p>When you create an account we keep your email address and a secure login handled by Firebase Authentication (a Google service). If you sign in with Google, we receive your name, email address and profile photo from Google.</p>
+    <h3>What you save</h3>
+    <ul>
+      <li>Mood check-ins: the mood you pick and any note you write.</li>
+      <li>Self-check results: your scores for the depression (PHQ-9), anxiety (GAD-7), stress (PSS-10), wellbeing (WHO-5) and social media checks. For PHQ-9 we also store whether you answered the question about thoughts of self-harm with anything other than "Not at all", so the site can show you crisis support.</li>
+      <li>Each entry's date and time.</li>
+    </ul>
+    <h3 id="chat">Chat messages</h3>
+    <p>Each message is sent to our server to produce a reply and is not stored by us. If our own model is unavailable, the message may be sent to Google's Gemini API to produce the reply, and Google's terms apply to that request.</p>
+    <h3 id="browser">Stored in your browser</h3>
+    <ul>
+      <li>Your login session, so you stay logged in.</li>
+      <li>Your cookie choice and dark or light mode setting.</li>
+      <li>Only if you choose "Allow" on the cookie notice: the campaign tags (UTM tags) of the link you arrived from. If you log in, they're saved once with your account so we can see which links help people find us.</li>
+    </ul>
+
+    <h2 id="use">How we use it</h2>
+    <ul>
+      <li>To show you your own history, charts and results.</li>
+      <li>To produce chat replies.</li>
+      <li>To keep the service secure and working.</li>
+    </ul>
+    <p>We don't use your entries for advertising, and we don't use them to train the chat model.</p>
+
+    <h2 id="where">Where it's kept and who can see it</h2>
+    <p>Account and saved data are stored in Google Firebase (Authentication and Cloud Firestore). The database's security rules only allow a logged-in person to read and write their own entries. People who run MindMender can access the database for maintenance; we only look at personal entries when you ask us to fix a problem or when the law requires it.</p>
+    <p>Parts of the site load code from other providers: Firebase from Google, and the mood chart library from jsDelivr. These providers receive basic technical information like your IP address when your browser loads their files.</p>
+
+    <h2 id="keep">How long we keep it</h2>
+    <p>Your data stays until you delete it or your account is deleted.</p>
+
+    <h2 id="rights">Your choices</h2>
+    <ul>
+      <li>You can stop using the site at any time.</li>
+      <li>You can change your cookie choice by clearing this site's data in your browser; the notice will appear again.</li>
+      <li>You can ask us for a copy of your data, to correct it, or to delete your account and everything saved with it. A delete button inside the site is on the way.</li>
+    </ul>
+
+    <h2 id="age">Age</h2>
+    <p>MindMender is meant for people aged 18 and over.</p>
+
+    <h2 id="changes">Changes to this policy</h2>
+    <p>If we change how we handle your data, we'll update this page and the date at the bottom of it. For important changes we'll tell you on the site before they take effect.</p>
+
+    <h2 id="contact">Contact</h2>
+    <p>A contact address for privacy questions will be listed here before MindMender opens to the public.</p>
+  </main>
+</body>
+</html>
