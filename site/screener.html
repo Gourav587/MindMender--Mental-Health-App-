@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Self-check · MindMender</title>
   <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-06">
   <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
 </head>
 <body>
   <header></header>
@@ -19,16 +21,17 @@
     <div id="result" class="card" hidden aria-live="polite"></div>
     <div class="card">
       <h2>Past results</h2>
-      <ul id="past"><li class="muted">Loading…</li></ul>
+      <ul id="past"></ul>
     </div>
   </main>
   <script type="module">
-    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { requireLogin, questionnaire, save, history, LOADING, LOAD_ERROR } from './app.js';
+    import { busy, enhanceCopy } from './ui.js';
     import { TWO_WEEK_OPTIONS, PHQ9_QUESTIONS, GAD7_QUESTIONS, phq9Score, gad7Score } from './scoring.js';
     await requireLogin();
 
     const CRISIS = '<div class="crisis"><strong>You said you\'ve had thoughts of being better off dead or of hurting yourself.</strong> '
-      + 'Please talk to someone now: India Tele-MANAS <a href="tel:14416">14416</a> or KIRAN <a href="tel:18005990019">1800-599-0019</a> · '
+      + 'Please talk to someone now: India Tele-MANAS <a href="tel:14416" data-copy="14416">14416</a> or KIRAN <a href="tel:18005990019" data-copy="1800-599-0019">1800-599-0019</a> · '
       + 'US <a href="tel:988">988</a> · elsewhere <a href="https://findahelpline.com">findahelpline.com</a>. '
       + 'If you are in immediate danger, call 112 (India) or your local emergency number.</div>';
     const SEE_SOMEONE = 'Please consider talking to a doctor or counsellor; you don\'t have to handle this alone. Sharing this result with them can help.';
@@ -64,7 +67,9 @@
     const past = document.getElementById('past');
 
     async function showHistory() {
-      const rows = await history(coll, 10);
+      past.innerHTML = LOADING;
+      let rows;
+      try { rows = await history(coll, 10); } catch { past.innerHTML = LOAD_ERROR; return; }
       past.innerHTML = rows.length
         ? rows.map((r) => `<li>${new Date(r.ts).toLocaleDateString()}: <strong>${r.score}/${test.max}</strong> (${r.band})</li>`).join('')
         : '<li class="muted">No results yet.</li>';
@@ -76,9 +81,10 @@
       const box = document.getElementById('result');
       box.hidden = false;
       box.innerHTML = (result.selfHarm ? CRISIS : '')
-        + `<h2>Your score: ${result.score} / ${test.max} (${result.band})</h2><p>${test.advice[result.band]}</p>`;
+        + `<h2>Your score: ${result.score} / ${test.max} (${result.band})</h2><p>${test.advice[result.band]}</p>` + '<div class="actions"><button type="button" class="secondary" onclick="print()">Print or save as PDF</button></div>';
+      enhanceCopy(box);
       box.scrollIntoView({ behavior: 'smooth' });
-      await save(coll, result);
+      await busy(e.submitter, () => save(coll, result)).catch(() => {});
       showHistory();
     };
     showHistory();

@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stress Test · MindMender</title>
   <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-06">
   <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
 </head>
 <body>
   <header></header>
@@ -19,11 +21,12 @@
     <div id="result" class="card" hidden aria-live="polite"></div>
     <div class="card">
       <h2>Past results</h2>
-      <ul id="past"><li class="muted">Loading…</li></ul>
+      <ul id="past"></ul>
     </div>
   </main>
   <script type="module">
-    import { requireLogin, questionnaire, save, history } from './app.js';
+    import { requireLogin, questionnaire, save, history, LOADING, LOAD_ERROR } from './app.js';
+    import { busy } from './ui.js';
     import { PSS_QUESTIONS, PSS_OPTIONS, pssScore } from './scoring.js';
     await requireLogin();
 
@@ -37,7 +40,9 @@
     const past = document.getElementById('past');
 
     async function showHistory() {
-      const rows = await history('stress', 10);
+      past.innerHTML = LOADING;
+      let rows;
+      try { rows = await history('stress', 10); } catch { past.innerHTML = LOAD_ERROR; return; }
       past.innerHTML = rows.length
         ? rows.map((r) => `<li>${new Date(r.ts).toLocaleDateString()}: <strong>${r.score}/40</strong> (${r.band})</li>`).join('')
         : '<li class="muted">No results yet.</li>';
@@ -48,9 +53,10 @@
       const { score, band } = pssScore(answers());
       const result = document.getElementById('result');
       result.hidden = false;
-      result.innerHTML = `<h2>Your score: ${score} / 40 (${band} stress)</h2><p>${ADVICE[band]}</p>`;
+      result.innerHTML = `<h2>Your score: ${score} / 40 (${band} stress)</h2><p>${ADVICE[band]}</p>`
+        + '<div class="actions"><button type="button" class="secondary" onclick="print()">Print or save as PDF</button></div>';
       result.scrollIntoView({ behavior: 'smooth' });
-      await save('stress', { score, band });
+      await busy(e.submitter, () => save('stress', { score, band })).catch(() => {});
       showHistory();
     };
     showHistory();
