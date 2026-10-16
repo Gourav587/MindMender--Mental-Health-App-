@@ -14,10 +14,12 @@ export const PSS_QUESTIONS = [
 ];
 const PSS_REVERSED = new Set([3, 4, 6, 7]); // items 4, 5, 7, 8 are positively worded
 
+const sum = (answers) => answers.reduce((s, a) => s + a, 0);
+const band = (score, cuts) => cuts.find(([max]) => score <= max)[1];
+
 export function pssScore(answers) {
   const score = answers.reduce((sum, a, i) => sum + (PSS_REVERSED.has(i) ? 4 - a : a), 0);
-  const band = score <= 13 ? 'low' : score <= 26 ? 'moderate' : 'high';
-  return { score, band };
+  return { score, band: band(score, [[13, 'low'], [26, 'moderate'], [40, 'high']]) };
 }
 
 // WHO-5 Well-Being Index. Answers are 0 (At no time) .. 5 (All of the time).
@@ -31,9 +33,8 @@ export const WHO5_QUESTIONS = [
 ];
 
 export function who5Score(answers) {
-  const score = answers.reduce((sum, a) => sum + a, 0) * 4;
-  const band = score <= 28 ? 'very low' : score <= 50 ? 'low' : 'good';
-  return { score, band };
+  const score = sum(answers) * 4;
+  return { score, band: band(score, [[28, 'very low'], [50, 'low'], [100, 'good']]) };
 }
 
 // PHQ-9 (depression) and GAD-7 (anxiety), Kroenke & Spitzer; free to use. Answers 0..3 over the last 2 weeks.
@@ -58,9 +59,6 @@ export const GAD7_QUESTIONS = [
   'Becoming easily annoyed or irritable',
   'Feeling afraid, as if something awful might happen',
 ];
-
-const sum = (answers) => answers.reduce((s, a) => s + a, 0);
-const band = (score, cuts) => cuts.find(([max]) => score <= max)[1];
 
 export function phq9Score(answers) {
   const score = sum(answers);
@@ -101,6 +99,6 @@ const COMPARISON_FEELING = [0, 4, 2, 0, 0, 0]; // only negative feelings count: 
 export function smScore(answers) {
   const areas = { adhd: 0, anxiety: 0, selfEsteem: 0, depression: 0 };
   answers.forEach((a, i) => { areas[SM_AREAS[i]] += i === 7 ? COMPARISON_FEELING[a] : a; });
-  const total = Object.values(areas).reduce((s, v) => s + v, 0);
+  const total = sum(Object.values(areas));
   return { areas, total, checkup: total >= 40 }; // max 59; the study's checkup threshold is 40
 }
