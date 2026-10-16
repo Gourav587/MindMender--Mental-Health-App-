@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Self-check · MindMender</title>
   <link rel="icon" href="img/logo.png">
-  <meta name="updated" content="2026-10-06">
+  <meta name="updated" content="2026-10-16">
   <link rel="stylesheet" href="style.css">
   <script src="boot.js"></script>
 </head>
@@ -13,7 +13,7 @@
   <header></header>
   <main>
     <h1 id="title">Self-check</h1>
-    <p class="muted">Over the <strong>last two weeks</strong>, how often have you been bothered by each of these? It's a self-check, not a diagnosis.</p>
+    <p class="muted" id="intro">Over the <strong>last two weeks</strong>, how often have you been bothered by each of these? It's a self-check, not a diagnosis.</p>
     <form id="form">
       <div id="questions"></div>
       <button>See my result</button>
@@ -27,7 +27,7 @@
   <script type="module">
     import { requireLogin, questionnaire, save, history, LOADING, LOAD_ERROR } from './app.js';
     import { busy, enhanceCopy } from './ui.js';
-    import { TWO_WEEK_OPTIONS, PHQ9_QUESTIONS, GAD7_QUESTIONS, phq9Score, gad7Score } from './scoring.js';
+    import { TWO_WEEK_OPTIONS, PHQ9_QUESTIONS, GAD7_QUESTIONS, phq9Score, gad7Score, PSS_OPTIONS, PSS_QUESTIONS, pssScore } from './scoring.js';
     await requireLogin();
 
     const CRISIS = '<div class="crisis"><strong>You said you\'ve had thoughts of being better off dead or of hurting yourself.</strong> '
@@ -55,6 +55,16 @@
           severe: 'Your answers suggest severe anxiety symptoms. Please see a doctor or mental health professional soon. ' + SEE_SOMEONE,
         },
       },
+      stress: {
+        title: 'Stress check (PSS-10)', questions: PSS_QUESTIONS, score: pssScore, max: 40,
+        options: PSS_OPTIONS, prefix: 'In the last month, how often have you ',
+        intro: 'The Perceived Stress Scale (PSS-10). Think about the <strong>last month</strong> and pick how often each applied to you. It\'s a self-check, not a diagnosis.',
+        advice: {
+          low: 'Your stress level looks low. Keep doing what works for you.',
+          moderate: 'You are carrying a moderate amount of stress. A few minutes of <a href="relax.html">breathing or grounding</a> each day can help, and so can <a href="chat.html">talking it through</a>.',
+          high: 'Your stress level looks high. Please be kind to yourself: try the <a href="relax.html">relax exercises</a>, and consider talking to a counsellor or doctor. If you ever feel unsafe, call Tele-MANAS 14416 (India) or 988 (US).',
+        },
+      },
     };
 
     const key = new URLSearchParams(location.search).get('t');
@@ -62,8 +72,9 @@
     const coll = TESTS[key] ? key : 'phq9';
     document.title = `${test.title} · MindMender`;
     document.getElementById('title').textContent = test.title;
+    if (test.intro) document.getElementById('intro').innerHTML = test.intro;
 
-    const answers = questionnaire(document.getElementById('questions'), test.questions, TWO_WEEK_OPTIONS);
+    const answers = questionnaire(document.getElementById('questions'), test.questions, test.options ?? TWO_WEEK_OPTIONS, test.prefix);
     const past = document.getElementById('past');
 
     async function showHistory() {

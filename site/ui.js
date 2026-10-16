@@ -7,7 +7,7 @@ const CONTACT_EMAIL = '';
 const NAV = [['chat.html', 'Chat'], ['checks.html', 'Self-checks'], ['mood.html', 'Mood'], ['relax.html', 'Relax'], ['faq.html', 'FAQ']];
 // Pages the site search reads. Screener questions are drawn by script, so their titles carry the search.
 const SEARCH_PAGES = ['index.html', 'chat.html', 'checks.html', 'screener.html?t=phq9', 'screener.html?t=gad7',
-  'stress.html', 'social.html', 'mood.html', 'relax.html', 'faq.html', 'privacy.html', 'terms.html'];
+  'screener.html?t=stress', 'social.html', 'mood.html', 'relax.html', 'faq.html', 'privacy.html', 'terms.html'];
 const HELPLINES = [['India · Tele-MANAS', '14416'], ['India · KIRAN', '1800-599-0019'], ['US · Suicide & Crisis Lifeline', '988']];
 
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -179,7 +179,7 @@ async function loadIndex() {
       const doc = parser.parseFromString(await (await fetch(href)).text(), 'text/html');
       doc.querySelectorAll('script, header, footer').forEach((n) => n.remove());
       const title = doc.title.replace(' · MindMender', '');
-      const special = { 'screener.html?t=phq9': 'Depression check (PHQ-9)', 'screener.html?t=gad7': 'Anxiety check (GAD-7)' }[href];
+      const special = { 'screener.html?t=phq9': 'Depression check (PHQ-9)', 'screener.html?t=gad7': 'Anxiety check (GAD-7)', 'screener.html?t=stress': 'Stress check (PSS-10)' }[href];
       const entries = [{ title: special ?? title, href, text: doc.querySelector('main')?.textContent ?? '' }];
       // Each FAQ answer is its own result so search can jump straight to it.
       doc.querySelectorAll('details[id]').forEach((d) => entries.push({
