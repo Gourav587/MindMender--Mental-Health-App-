@@ -2,7 +2,7 @@
 
 A mental health website where you can:
 
-- **Chat** with a supportive AI listener (our fine-tuned model, or Gemini + RAG over `separated_conversation.csv` as a fallback), with crisis detection and a safety filter on replies
+- **Chat** with a supportive AI listener (our own fine-tuned model), with crisis detection, a safety filter on replies, and a per-user rate limit for signed-in users
 - **Take self-checks**: depression (PHQ-9), anxiety (GAD-7), stress (PSS-10), and a 13-question social media check scored by attention, anxiety, self-esteem and low mood
 - **Track your mood** with daily check-ins, a trend chart, and the WHO-5 wellbeing check
 - **Keep a journal** on lined paper in a handwriting font, with six kinds of prompts (free write, gratitude, brain dump, worry check, letter to myself, feelings and body)
@@ -17,14 +17,27 @@ Built with plain HTML/CSS/JS (`site/`), FastAPI (`main.py`), and Firebase Auth +
 
 ## Run locally
 
+The chat server needs a trained model in `models/chat/` (see "Train your own chat model" below).
+
 ```sh
-cp .env.example .env   # put your Gemini key in GOOGLE_API_KEY
-docker compose up --build
+pip install -r requirements.txt
+uvicorn main:app --port 8000
 ```
 
-Then open http://localhost:8000. The first start takes a minute while it builds the embeddings.
+Or with Docker: `docker compose up --build`. Either way, open http://localhost:8000 (use `localhost`, not `127.0.0.1`, which isn't an authorized sign-in domain).
 
 Scoring self-check: `node site/scoring.test.js`
+
+## Deploy
+
+The chat server runs on Google Cloud Run (built in the cloud from the `Dockerfile`; `.gcloudignore` decides what is uploaded, including `models/chat/`). The website runs on Firebase Hosting, which forwards `/chat` to Cloud Run.
+
+```sh
+gcloud run deploy mindmender-chat --source . --region asia-south1 \
+  --cpu 2 --memory 4Gi --min-instances 0 --max-instances 2 \
+  --concurrency 4 --timeout 120 --cpu-boost --allow-unauthenticated
+firebase deploy --only hosting,firestore:rules
+```
 
 ## Firebase setup
 
@@ -34,7 +47,7 @@ Scoring self-check: `node site/scoring.test.js`
 
 ## Train your own chat model
 
-By default the chat uses Gemini with the Q&As in `separated_conversation.csv`. To use your own model instead, fine-tune a small Hugging Face model:
+The chat runs on a small Hugging Face model fine-tuned on counselling Q&As:
 
 ```sh
 pip install -r requirements-train.txt
@@ -43,5 +56,5 @@ python train_chat.py --data separated_conversation.csv --data <hf-dataset-id-or-
 
 - `--data` takes local `.csv`/`.json`/`.jsonl`/`.parquet` files or Hugging Face dataset ids, and can be repeated. Columns are detected for `separated_conversation.csv` (`human_prompt`/`assistant_output`), Counsel Chat (`questionText`/`answerText`) and `Amod/mental_health_counseling_conversations` (`Context`/`Response`); for other data pass `--prompt-col` and `--response-col`.
 - The default base is `Qwen/Qwen2.5-0.5B-Instruct` (runs on an M-series Mac or a free Colab GPU). Use `--base Qwen/Qwen2.5-1.5B-Instruct` on a GPU for better replies.
-- The model is saved to `models/chat/`. When that folder exists, `main.py` uses it for chat and no longer needs the Gemini key. Delete it to go back to Gemini.
+- The model is saved to `models/chat/`, which `main.py` loads on start.
 - If you see a Keras/TensorFlow error, run with `USE_TF=0`.
