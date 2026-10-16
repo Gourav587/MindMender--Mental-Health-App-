@@ -1,5 +1,12 @@
 {
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": "site",
+    "ignore": ["scoring.test.js"],
+    "rewrites": [
+      { "source": "/chat", "run": { "serviceId": "mindmender-chat", "region": "asia-south1" } }
+    ]
   }
 }
