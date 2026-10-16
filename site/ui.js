@@ -38,7 +38,7 @@ document.body.insertAdjacentHTML('afterbegin', '<a class="skip" href="#main">Ski
 const header = document.querySelector('header');
 header.className = 'site-header';
 header.innerHTML = `
-  <a class="brand" href="/"><img src="img/logo.png" alt="" width="32" height="32">MindMender</a>
+  <a class="brand" href="/"><img src="img/logo.svg" alt="" width="32" height="32">MindMender</a>
   <nav class="site-nav" id="site-nav" aria-label="Main">
     ${NAV.map(([href, text]) => `<a href="${href}"${location.pathname.endsWith('/' + href) ? ' aria-current="page"' : ''}>${text}</a>`).join('')}
     <a id="auth" href="login.html">Log in</a>
