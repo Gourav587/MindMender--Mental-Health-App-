@@ -52,7 +52,8 @@
 
     const FACES = ['', '😞', '🙁', '😐', '🙂', '😄'];
     const $ = (id) => document.getElementById(id);
-    const css = getComputedStyle(document.documentElement);
+    // Tokens are light-dark() pairs, which canvas can't read; let the browser resolve them to rgb.
+    const color = (token) => { $('chart').style.color = `var(${token})`; return getComputedStyle($('chart')).color; };
     let chart;
 
     async function showMood() {
@@ -79,14 +80,14 @@
         type: 'line',
         data: {
           labels: rows.map((r) => new Date(r.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
-          datasets: [{ data: rows.map((r) => r.mood), borderColor: css.getPropertyValue('--accent'), tension: 0 }],
+          datasets: [{ data: rows.map((r) => r.mood), borderColor: color('--accent'), tension: 0 }],
         },
         options: {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: { min: 1, max: 5, ticks: { stepSize: 1, callback: (v) => FACES[v] }, grid: { color: css.getPropertyValue('--border') } },
-            x: { ticks: { color: css.getPropertyValue('--muted') }, grid: { display: false } },
+            y: { min: 1, max: 5, ticks: { stepSize: 1, callback: (v) => FACES[v] }, grid: { color: color('--border') } },
+            x: { ticks: { color: color('--muted') }, grid: { display: false } },
           },
         },
       });

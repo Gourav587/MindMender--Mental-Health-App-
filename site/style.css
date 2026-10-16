@@ -1,38 +1,26 @@
-/* Tokens. Light is the default; dark follows the system unless the toggle set data-theme. */
+/* Tokens: light-dark(light, dark). Dark follows the system unless the toggle set data-theme. */
 :root {
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --text: #24272a;
-  --muted: #5d635c;
-  --accent: #3f6b5c;
-  --accent-hover: #335849;
-  --on-accent: #ffffff;
-  --accent-soft: #e1ebe6;
-  --border: #dcd8ce;
-  --warn: #a4512f;
-  --warn-soft: #f6e6de;
-  --ok: #2f6b45;
+  color-scheme: light dark;
+  --bg: light-dark(#f6f4ef, #161917);
+  --surface: light-dark(#ffffff, #1f2320);
+  --text: light-dark(#24272a, #e6e7e2);
+  --muted: light-dark(#5d635c, #a2a89f);
+  --accent: light-dark(#3f6b5c, #8cc2ad);
+  --accent-hover: light-dark(#335849, #a5d3c0);
+  --on-accent: light-dark(#ffffff, #10241c);
+  --accent-soft: light-dark(#e1ebe6, #29352f);
+  --border: light-dark(#dcd8ce, #343a35);
+  --warn: light-dark(#a4512f, #e39a78);
+  --warn-soft: light-dark(#f6e6de, #3a2a22);
+  --ok: light-dark(#2f6b45, #8fcfa6);
   --serif: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --r-sm: 6px;
   --r: 10px;
   --header-h: 60px;
-  color-scheme: light;
 }
-:root[data-theme="dark"] {
-  --bg: #161917; --surface: #1f2320; --text: #e6e7e2; --muted: #a2a89f;
-  --accent: #8cc2ad; --accent-hover: #a5d3c0; --on-accent: #10241c; --accent-soft: #29352f;
-  --border: #343a35; --warn: #e39a78; --warn-soft: #3a2a22; --ok: #8fcfa6;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #161917; --surface: #1f2320; --text: #e6e7e2; --muted: #a2a89f;
-    --accent: #8cc2ad; --accent-hover: #a5d3c0; --on-accent: #10241c; --accent-soft: #29352f;
-    --border: #343a35; --warn: #e39a78; --warn-soft: #3a2a22; --ok: #8fcfa6;
-    color-scheme: dark;
-  }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html { scroll-padding-top: calc(var(--header-h) + 16px); }
@@ -92,12 +80,12 @@ a:hover { color: var(--accent-hover); }
 .grid .card h2 { margin: 0 0 4px; font-size: 20px; color: var(--accent); }
 
 /* Buttons: rectangles with a small radius, never pills */
-button, .button {
+button {
   font: inherit; font-weight: 600; cursor: pointer; border: 1px solid var(--accent); border-radius: var(--r-sm);
-  padding: 10px 18px; background: var(--accent); color: var(--on-accent); text-decoration: none; display: inline-block;
+  padding: 10px 18px; background: var(--accent); color: var(--on-accent); display: inline-block;
   transition: background-color .15s, border-color .15s;
 }
-button:hover, .button:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
+button:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
 button.secondary { background: transparent; color: var(--text); border-color: var(--border); }
 button.secondary:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
 button:disabled { opacity: .55; cursor: default; }
@@ -208,7 +196,7 @@ mark { background: var(--accent-soft); color: inherit; }
 /* Print: content only, readable in black on white */
 @media print {
   :root { --bg: #fff; --surface: #fff; --text: #000; --muted: #333; --border: #999; --accent: #000; }
-  .site-header, .site-nav, .tools, .fab, .to-top, .toasts, .cookie, .skip, .progress, button, form button, #chat-form { display: none !important; }
+  .site-header, .fab, .to-top, .toasts, .cookie, .skip, button, #chat-form { display: none !important; }
   body { font-size: 12pt; }
   main { max-width: none; padding: 0; }
   .card, fieldset { break-inside: avoid; }
