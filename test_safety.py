@@ -1,5 +1,5 @@
 # Run: python test_safety.py
-from safety import FALLBACK_REPLY, clean_response, safe_reply
+from safety import CRISIS, FALLBACK_REPLY, clean_response, safe_reply
 
 advice = "It is common to feel this way. Try writing down your worries before bed. A therapist can help you sort through them."
 assert clean_response(advice) == advice
@@ -21,4 +21,23 @@ invented = advice + " Also, some online sites such as Betterment offer therapist
 assert safe_reply(invented) == advice
 assert safe_reply("I offer free phone consultations and I would love to talk with you.") == FALLBACK_REPLY
 assert safe_reply(advice) == advice
+# Crisis check: every form of the verbs, and indirect phrasings. These skip the model and get helplines.
+crisis = [
+    "I want to kill myself", "I keep cutting myself when it gets bad", "I've been hurting myself again",
+    "I thought about killing myself", "I want to end my life", "I'm thinking of ending it all",
+    "I took my own life in my dreams", "I just want to die", "I don't want to be alive anymore",
+    "I don’t want to live", "I do not want to wake up tomorrow", "Everyone would be better off without me",
+    "they'd be better off dead", "there's no reason to live", "I have nothing left to live for",
+    "I want to overdose", "I've been self harming", "suicidal thoughts again", "I starved myself all week",
+]
+for m in crisis:
+    assert CRISIS.search(m), m
+# Everyday sentences must still reach the chat.
+everyday = [
+    "This exam is killing me", "I'm dying to see that film", "I could kill for a coffee",
+    "My back hurts", "I cut my hair short", "I want to live a calmer life", "I don't want to go to work",
+    "I'm better off on my own for a while", "That joke killed me",
+]
+for m in everyday:
+    assert not CRISIS.search(m), m
 print("safety ok")

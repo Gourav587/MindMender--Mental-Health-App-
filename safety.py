@@ -8,8 +8,17 @@ SYSTEM_PROMPT = (
     "and suggest a mental health professional for anything serious."
 )
 
-# ponytail: keyword match only, misses indirect phrasing; swap in an LLM classifier if that matters
-CRISIS = re.compile(r"suicid|kill myself|end my life|self[- ]?harm|hurt myself|want to die|cut myself", re.I)
+# Messages that skip the model and get helplines. Verbs match every form (cut, cuts, cutting); indirect phrasings
+# with no crisis verb are listed as they are. ' or ’ because phones type curly apostrophes.
+# ponytail: still a phrase list, so new phrasings slip through; a classifier or a bigger model is the real fix
+CRISIS = re.compile("|".join([
+    r"suicid", r"self[- ]?harm", r"overdos",
+    r"\b(kill(s|ed|ing)?|hurt(s|ing)?|cut(s|ting)?|harm(s|ed|ing)?|hang(s|ed|ing)?|starv(e|es|ed|ing))\s+my\s?self\b",
+    r"\b(end(s|ed|ing)?|tak(e|es|ing)|took)\s+my\s+(own\s+)?life\b", r"\bend(ing)?\s+it\s+all\b",
+    r"\bwant(s|ed|ing)?\s+to\s+die\b", r"\bbetter\s+off\s+(dead|without\s+me)\b",
+    r"\b(don['’]?t|do\s+not|no\s+longer)\s+want\s+to\s+(live|be\s+alive|exist|wake\s+up)\b",
+    r"\bno\s+reason\s+to\s+live\b", r"\bnothing\s+(left\s+)?to\s+live\s+for\b",
+]), re.I)
 CRISIS_REPLY = (
     "I'm really sorry you're feeling this way. You deserve support right now, and talking to a person can help. "
     "Please reach out to a helpline: India: Tele-MANAS 14416 or KIRAN 1800-599-0019. US: call or text 988. "
