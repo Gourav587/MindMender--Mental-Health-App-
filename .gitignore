@@ -3,3 +3,5 @@ __pycache__
 models/
 
 .venv/
+eval-out/
+eval_results.json

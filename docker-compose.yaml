@@ -3,3 +3,14 @@ services:
     build: .
     ports:
       - "8000:8080"
+
+  # Checks the model's replies inside the real image, with Cloud Run's limits: docker compose run --rm eval
+  eval:
+    build: .
+    profiles: ["eval"]  # not started by "docker compose up"
+    cpus: 2
+    mem_limit: 4g
+    volumes:
+      - ./eval_chat.py:/app/eval_chat.py:ro
+      - ./eval-out:/out
+    command: python eval_chat.py --out /out/results.json
