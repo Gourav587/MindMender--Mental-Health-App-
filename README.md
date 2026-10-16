@@ -5,6 +5,7 @@ A mental health website where you can:
 - **Chat** with a supportive AI listener (our fine-tuned model, or Gemini + RAG over `separated_conversation.csv` as a fallback), with crisis detection and a safety filter on replies
 - **Take self-checks**: depression (PHQ-9), anxiety (GAD-7), stress (PSS-10), and a 13-question social media check scored by attention, anxiety, self-esteem and low mood
 - **Track your mood** with daily check-ins, a trend chart, and the WHO-5 wellbeing check
+- **Keep a journal** on lined paper in a handwriting font, with six kinds of prompts (free write, gratitude, brain dump, worry check, letter to myself, feelings and body)
 - **Relax** with box breathing, 5-4-3-2-1 grounding, and quick tips
 - **Find answers** in the FAQ, Privacy Policy and Terms, or search the whole site (press `/`)
 
