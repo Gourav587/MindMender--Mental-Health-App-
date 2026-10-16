@@ -44,10 +44,12 @@ The chat server runs on Google Cloud Run (built in the cloud from the `Dockerfil
 
 ```sh
 gcloud run deploy mindmender-chat --source . --region asia-south1 \
-  --cpu 2 --memory 4Gi --min-instances 0 --max-instances 2 \
-  --concurrency 4 --timeout 120 --cpu-boost --allow-unauthenticated
+  --cpu 8 --memory 4Gi --min-instances 0 --max-instances 2 \
+  --concurrency 2 --timeout 120 --cpu-boost --allow-unauthenticated
 firebase deploy --only hosting,firestore:rules
 ```
+
+8 CPUs because replies are generated on CPU: measured in the image, about 18 s per reply on 8 CPUs versus about 65 s on 2, and Firebase Hosting allows 60 s. Cost per reply is about the same, since Cloud Run bills only while working.
 
 ## Firebase setup
 
