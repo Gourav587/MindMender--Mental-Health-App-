@@ -8,17 +8,32 @@ SYSTEM_PROMPT = (
     "and suggest a mental health professional for anything serious."
 )
 
-# Messages that skip the model and get helplines. Verbs match every form (cut, cuts, cutting); indirect phrasings
-# with no crisis verb are listed as they are. ' or ’ because phones type curly apostrophes.
+# Messages that skip the model and get helplines: about the person, someone else, the past, or asking for a helpline.
+# Verbs match every form (cut, cuts, cutting); indirect phrasings with no crisis verb are listed as they are;
+# ' or ’ because phones type curly apostrophes. Tested against golden/crisis.csv (python test_crisis_golden.py).
 # ponytail: still a phrase list, so new phrasings slip through; a classifier or a bigger model is the real fix
-CRISIS = re.compile("|".join([
-    r"suicid", r"self[- ]?harm", r"overdos",
-    r"\b(kill(s|ed|ing)?|hurt(s|ing)?|cut(s|ting)?|harm(s|ed|ing)?|hang(s|ed|ing)?|starv(e|es|ed|ing))\s+my\s?self\b",
-    r"\b(end(s|ed|ing)?|tak(e|es|ing)|took)\s+my\s+(own\s+)?life\b", r"\bend(ing)?\s+it\s+all\b",
-    r"\bwant(s|ed|ing)?\s+to\s+die\b", r"\bbetter\s+off\s+(dead|without\s+me)\b",
-    r"\b(don['’]?t|do\s+not|no\s+longer)\s+want\s+to\s+(live|be\s+alive|exist|wake\s+up)\b",
+SELF = r"(my|him|her|them)\s?sel(f|ves)|themself"
+CRISIS_PHRASES = [
+    r"\bsu[iy]?[cs]{1,2}[iy]?d",  # suicide, suicidal and common misspellings (sucide, suicdal, suiside)
+    r"\bself[- ]?harm", r"\boverdos", r"\bkms\b", r"\bunaliv", r"\bsewer\s?slide",
+    rf"\b(kill(s|ed|ing)?|hurt(s|ing)?|cut(s|ting)?|harm(s|ed|ing)?|hang(s|ed|ing)?|starv(e|es|ed|ing))\s+({SELF})\b",
+    r"\bend(s|ed|ing)?\s+(my|his|her|their)\s+(own\s+)?life\b", r"\bend(ing)?\s+it\s+all\b",
+    r"\b(tak(e|es|ing)|took)\s+(my|his|her|their)\s+own\s+life\b",
+    r"\b(tak(e|es|ing)|took)\s+my\s+life\s*([.!?]|$)",  # not "take my life in a new direction"
+    r"\b(want(s|ed|ing)?\s+(to|2)|wanna)\s+die\b", r"\bbetter\s+off\s+(dead|without\s+me)\b",
+    r"\b(don['’]?t|doesn['’]?t|do\s+not|does\s+not|no\s+longer)\s+want\s+to\s+(live|be\s+alive|exist|wake\s+up)\b",
     r"\bno\s+reason\s+to\s+live\b", r"\bnothing\s+(left\s+)?to\s+live\s+for\b",
-]), re.I)
+    r"\b(wish|if)\s+i\s+(was|were)\s+(dead|never\s+born)\b", r"\bwish\s+i\s+wasn['’]?t\s+(alive|here|born)\b",
+    r"\bif\s+i\s+(died|was\s+gone|were\s+gone)\b", r"\bcan['’]?t\s+go\s+on\s*(anymore|any\s+more|like\s+this|living|[.!,]|$)",
+    r"\b(want|wanna)\s+(it\s+all|everything|my\s+life)\s+to\s+end\b", r"\bdisappear\s+forever\b",
+    r"\bpoint\s+(of|in)\s+(living|being\s+alive|going\s+on)\b",
+    r"\b(help|hot|crisis)\s?line\b",  # asking for a helpline: the helpline reply is the answer
+]
+# "I'm not suicidal", "I would never hurt myself", "I don't want to kill myself": a denial goes to the chat.
+# Only the words right before the phrase count, so "I can't stop cutting myself" is still caught.
+NEGATIONS = ["not", "never", "don't", "dont", "don’t", "won't", "wont", "won’t", "wouldn't", "wouldnt", "wouldn’t"]
+NOT_DENIED = "".join(rf"(?<!\b{re.escape(n)} {bridge})" for n in NEGATIONS for bridge in ["", "going to ", "want to "])
+CRISIS = re.compile(NOT_DENIED + "(?:" + "|".join(CRISIS_PHRASES) + ")", re.I)
 CRISIS_REPLY = (
     "I'm really sorry you're feeling this way. You deserve support right now, and talking to a person can help. "
     "Please reach out to a helpline: India: Tele-MANAS 14416 or KIRAN 1800-599-0019. US: call or text 988. "
