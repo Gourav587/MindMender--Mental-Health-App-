@@ -5,12 +5,12 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, 
 
 // Public web config; access is enforced by firestore.rules.
 const app = initializeApp({
-  apiKey: 'AIzaSyAM66c4EXXKKXaP_SbsL2oTmzAUxwOX7Fc',
-  appId: '1:273965387967:web:fbcecbe0dd9af77d29b60a',
-  messagingSenderId: '273965387967',
-  projectId: 'mindmender-1dc9a',
-  authDomain: 'mindmender-1dc9a.firebaseapp.com',
-  storageBucket: 'mindmender-1dc9a.appspot.com',
+  apiKey: 'AIzaSyBGy5tVjCcY5Ah3IGCBwsnrxii_fp650Hk',
+  appId: '1:405768781307:web:40586f1a31d05d3fc89f5e',
+  messagingSenderId: '405768781307',
+  projectId: 'mindmender-dea8d',
+  authDomain: 'mindmender-dea8d.firebaseapp.com',
+  storageBucket: 'mindmender-dea8d.firebasestorage.app',
 });
 export const auth = getAuth(app);
 const db = getFirestore(app);
