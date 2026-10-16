@@ -115,8 +115,11 @@ def main():
     trainer.train(resume_from_checkpoint=args.resume)
     print("eval:", trainer.evaluate())
 
-    # Merge LoRA weights into the base so serving needs only transformers.
-    trainer.model.merge_and_unload().save_pretrained(args.out)
+    # Merge LoRA weights into the base so serving needs only transformers. Training turns the KV cache off to save
+    # memory; switch it back on in the saved model, or generation recomputes the whole chat for every new word.
+    merged = trainer.model.merge_and_unload()
+    merged.config.use_cache = True
+    merged.save_pretrained(args.out)
     AutoTokenizer.from_pretrained(args.base).save_pretrained(args.out)
     print(f"saved to {args.out}")
 

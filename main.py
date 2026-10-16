@@ -46,7 +46,8 @@ def check_rate(uid):
 def answer(message):
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message}]
     # 180 tokens is about 700-800 characters: short, calm replies that stay fast on Cloud Run's CPU
-    out = generator(messages, max_new_tokens=180, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1)
+    # use_cache: training saved the model with the KV cache off; without it each new word recomputes the whole chat (2.6x slower on CPU)
+    out = generator(messages, max_new_tokens=180, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1, use_cache=True)
     return out[0]["generated_text"][-1]["content"].strip()
 
 
