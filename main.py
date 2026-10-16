@@ -44,7 +44,8 @@ def check_rate(uid):
 
 def answer(message):
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message}]
-    out = generator(messages, max_new_tokens=300, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1)
+    # 180 tokens is about 700-800 characters: short, calm replies that stay fast on Cloud Run's CPU
+    out = generator(messages, max_new_tokens=180, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1)
     return out[0]["generated_text"][-1]["content"].strip()
 
 
