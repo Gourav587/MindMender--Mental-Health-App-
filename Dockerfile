@@ -9,7 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Only what the server needs. Never .env, .venv or .git.
 COPY models/chat ./models/chat
-COPY safety.py main.py ./
+COPY models/crisis-embed ./models/crisis-embed
+COPY golden/crisis.csv ./golden/crisis.csv
+COPY safety.py crisis.py main.py ./
 COPY site ./site
 
 CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}

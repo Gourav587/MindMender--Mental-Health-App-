@@ -8,3 +8,5 @@ CHANGES.txt
 separated_conversation.csv
 models/*
 !models/chat/
+!models/crisis-embed/
+models/crisis-embed/.cache/
