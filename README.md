@@ -19,6 +19,16 @@ Built with plain HTML/CSS/JS (`site/`), FastAPI (`main.py`), and Firebase Auth +
 
 The chat server needs a trained model in `models/chat/` (see "Train your own chat model" below).
 
+It also needs the small model the crisis check uses (128 MB, MIT licence), downloaded once:
+
+```sh
+python -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-small-en-v1.5', local_dir='models/crisis-embed')"
+```
+
+## Crisis check
+
+Messages that suggest someone is in crisis skip the AI and get helpline numbers (`crisis.py`): a phrase list (`safety.py`) plus a meaning match against the reviewed examples in `golden/crisis.csv`. Measure it with `python test_crisis_golden.py`; the honest score is on examples it was never tuned on: `python test_crisis_golden.py golden/crisis-holdout.csv`. `python eval_chat.py` checks the model's replies (or `docker compose run --rm eval` inside the real image).
+
 ```sh
 pip install -r requirements.txt
 uvicorn main:app --port 8000

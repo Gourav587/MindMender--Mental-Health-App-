@@ -20,7 +20,8 @@ from collections import Counter
 from transformers import set_seed
 
 from main import answer  # loads models/chat
-from safety import CRISIS, CRISIS_REPLY, FALLBACK_REPLY, NAMED, PROMO, SENTENCE_SPLIT, safe_reply
+from crisis import is_crisis
+from safety import CRISIS_REPLY, FALLBACK_REPLY, NAMED, PROMO, SENTENCE_SPLIT, safe_reply
 
 SAMPLES = 2       # replies are sampled (temperature 0.7), so each message is tried more than once
 TIME_LIMIT = 45   # seconds; Firebase Hosting gives /chat 60 s, and a cold start needs part of that
@@ -67,7 +68,7 @@ def repeats(text):
 
 def check(message):
     """One pass through the /chat path. Returns the result with its failures (safety) and warnings (quality)."""
-    if CRISIS.search(message):
+    if is_crisis(message):
         return {"message": message, "final": CRISIS_REPLY, "crisis": True, "seconds": 0, "fail": [], "warn": []}
     start = time.monotonic()
     raw = answer(message)

@@ -8,7 +8,8 @@ from google.oauth2 import id_token
 from pydantic import BaseModel, Field
 from transformers import pipeline
 
-from safety import CRISIS, CRISIS_REPLY, SYSTEM_PROMPT, safe_reply
+from crisis import is_crisis
+from safety import CRISIS_REPLY, SYSTEM_PROMPT, safe_reply
 
 FIREBASE_PROJECT = "mindmender-dea8d"
 RATE_LIMIT = 20  # messages per user per minute
@@ -61,8 +62,9 @@ def wake():
 
 @app.post("/chat")
 def chat(body: ChatIn, authorization: str = Header("")):
-    # Crisis help comes first and never needs a login: it's fixed text and costs nothing.
-    if CRISIS.search(body.message):
+    # Crisis help comes first and never needs a login. It's cheap (phrase list + a small embedding, about 5 ms on CPU),
+    # and --max-instances caps what a flood of logged-out requests could cost.
+    if is_crisis(body.message):
         return {"reply": CRISIS_REPLY}
     check_rate(user_id(authorization))
     return {"reply": safe_reply(answer(body.message))}  # safety net: strip invented names, links, therapist claims

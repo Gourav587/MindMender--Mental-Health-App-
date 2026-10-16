@@ -1,16 +1,17 @@
-# Run: python test_crisis_golden.py
-# Checks the crisis check (safety.CRISIS) against the reviewed examples in golden/crisis.csv.
+# Run: python test_crisis_golden.py [file]   (default golden/crisis.csv; golden/crisis-holdout.csv is the honest score)
+# Checks the full crisis check (crisis.is_crisis: phrase list + meaning match) against reviewed examples.
 # "helplines" rows must be caught; "chat" rows must reach the chat. Exit code 1 on any mismatch.
 import csv
+import sys
 from collections import Counter
 
-from safety import CRISIS
+from crisis import is_crisis
 
-with open("golden/crisis.csv", newline="") as f:
+with open(sys.argv[1] if len(sys.argv) > 1 else "golden/crisis.csv", newline="") as f:
     rows = list(csv.DictReader(f))
 
-missed = [r for r in rows if r["expected"] == "helplines" and not CRISIS.search(r["text"])]
-false_alarms = [r for r in rows if r["expected"] == "chat" and CRISIS.search(r["text"])]
+missed = [r for r in rows if r["expected"] == "helplines" and not is_crisis(r["text"])]
+false_alarms = [r for r in rows if r["expected"] == "chat" and is_crisis(r["text"])]
 wrong = Counter(r["category"] for r in missed + false_alarms)
 
 for title, group in [("MISSED: should get helplines, would reach the model", missed),

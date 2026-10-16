@@ -34,10 +34,12 @@ CRISIS_PHRASES = [
 NEGATIONS = ["not", "never", "don't", "dont", "don’t", "won't", "wont", "won’t", "wouldn't", "wouldnt", "wouldn’t"]
 NOT_DENIED = "".join(rf"(?<!\b{re.escape(n)} {bridge})" for n in NEGATIONS for bridge in ["", "going to ", "want to "])
 CRISIS = re.compile(NOT_DENIED + "(?:" + "|".join(CRISIS_PHRASES) + ")", re.I)
+ANY_CRISIS_PHRASE = re.compile("|".join(CRISIS_PHRASES), re.I)  # denied or not; crisis.py uses it to spot denials
 CRISIS_REPLY = (
     "I'm really sorry you're feeling this way. You deserve support right now, and talking to a person can help. "
     "Please reach out to a helpline: India: Tele-MANAS 14416 or KIRAN 1800-599-0019. US: call or text 988. "
-    "Elsewhere: findahelpline.com. If you're in immediate danger, call your local emergency number."
+    "Elsewhere: findahelpline.com. If you're in immediate danger, call your local emergency number. "
+    "If I've misread you, I'm sorry. Tell me a bit more and I'm here to listen."  # the meaning check can misread
 )
 FALLBACK_REPLY = (
     "I hear you, and I'm glad you shared this. Could you tell me a bit more about what's been going on? "
