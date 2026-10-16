@@ -26,7 +26,13 @@
   <script type="module">
     import { requireLogin } from './app.js';
     import { copyButton, confirmDialog } from './ui.js';
-    await requireLogin();
+    const user = await requireLogin();
+    fetch('/chat').catch(() => {}); // wakes the chat server while you type
+    const ERRORS = {
+      401: 'Your login has run out. Please refresh the page and log in again.',
+      429: 'You’re sending messages quickly. Take a breath, then try again in a minute.',
+      504: 'The chat was still waking up. Please send your message again.',
+    };
 
     const messages = document.getElementById('messages');
     const input = document.getElementById('input');
@@ -53,16 +59,16 @@
       try {
         const res = await fetch('/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await user.getIdToken() },
           body: JSON.stringify({ message }),
         });
         if (!res.ok) throw new Error(res.status);
         const reply = (await res.json()).reply;
         pending.textContent = reply;
         pending.append(copyButton(() => reply));
-      } catch {
+      } catch (err) {
         pending.classList.add('error');
-        pending.textContent = "Sorry, I couldn't reach the server. Please try again in a moment.";
+        pending.textContent = ERRORS[err.message] ?? "Sorry, I couldn't reach the server. Please try again in a moment.";
       }
       send.disabled = false;
       input.focus();

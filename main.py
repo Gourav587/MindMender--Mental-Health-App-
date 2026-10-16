@@ -1,68 +1,70 @@
-import os
+import time
+from collections import defaultdict, deque
 
-from dotenv import load_dotenv
-from fastapi import FastAPI
+import google.auth.transport.requests
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
+from google.oauth2 import id_token
 from pydantic import BaseModel, Field
+from transformers import pipeline
 
 from safety import CRISIS, CRISIS_REPLY, SYSTEM_PROMPT, safe_reply
 
-load_dotenv()
+FIREBASE_PROJECT = "mindmender-dea8d"
+RATE_LIMIT = 20  # messages per user per minute
+# ponytail: counts live in each instance's memory, so the real cap is RATE_LIMIT x instances; move to Firestore if that matters
 
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-CHAT_MODEL_DIR = "models/chat"  # written by train_chat.py
+generator = pipeline("text-generation", model="models/chat")  # written by train_chat.py
+google_request = google.auth.transport.requests.Request()
+recent = defaultdict(deque)  # uid -> times of their recent messages
 
 app = FastAPI()
 
-if os.path.isdir(CHAT_MODEL_DIR):
-    # Our own fine-tuned model.
-    from transformers import pipeline
 
-    generator = pipeline("text-generation", model=CHAT_MODEL_DIR)
+def user_id(authorization):
+    """The Firebase login token the chat page sends -> that user's uid, or 401."""
+    try:
+        claims = id_token.verify_firebase_token(authorization.removeprefix("Bearer "), google_request, audience=FIREBASE_PROJECT)
+        if claims["iss"] != f"https://securetoken.google.com/{FIREBASE_PROJECT}":
+            raise ValueError("token from another project")
+        return claims["sub"]
+    except Exception:
+        raise HTTPException(401, "Please log in again.")
 
-    def answer(message):
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message}]
-        out = generator(messages, max_new_tokens=300, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1)
-        return out[0]["generated_text"][-1]["content"].strip()
-else:
-    # No trained model yet: Gemini answering with the closest Q&As from separated_conversation.csv.
-    import chromadb
-    from llama_index.core import PromptTemplate, SimpleDirectoryReader, StorageContext, VectorStoreIndex
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-    from llama_index.llms.gemini import Gemini
-    from llama_index.vector_stores.chroma import ChromaVectorStore
 
-    llm = Gemini(model="models/gemini-2.5-flash", api_key=GOOGLE_API_KEY)
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en")
-    documents = SimpleDirectoryReader(input_files=["separated_conversation.csv"]).load_data()
-    vector_store = ChromaVectorStore(chroma_collection=chromadb.EphemeralClient().get_or_create_collection("quickstart"))
-    index = VectorStoreIndex.from_documents(
-        documents, storage_context=StorageContext.from_defaults(vector_store=vector_store), embed_model=embed_model
-    )
-    qa_prompt_tmpl = PromptTemplate(
-        SYSTEM_PROMPT + "\n"
-        "Helpful background:\n"
-        "---------------------\n"
-        "{context_str}\n"
-        "---------------------\n"
-        "User: {query_str}\n"
-        "MindMender: "
-    )
-    query_engine = index.as_query_engine(similarity_top_k=4, llm=llm, text_qa_template=qa_prompt_tmpl)
+def check_rate(uid):
+    now = time.monotonic()
+    times = recent[uid]
+    while times and now - times[0] > 60:
+        times.popleft()
+    if len(times) >= RATE_LIMIT:
+        raise HTTPException(429, "Too many messages. Try again in a minute.")
+    times.append(now)
 
-    def answer(message):
-        return str(query_engine.query(message))
+
+def answer(message):
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message}]
+    out = generator(messages, max_new_tokens=300, do_sample=True, temperature=0.7, top_p=0.9, repetition_penalty=1.1)
+    return out[0]["generated_text"][-1]["content"].strip()
 
 
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
 
 
+@app.get("/chat")
+def wake():
+    # The chat page calls this on load, so a sleeping server starts up while the person is still typing.
+    return {"ready": True}
+
+
 @app.post("/chat")
-def chat(body: ChatIn):
+def chat(body: ChatIn, authorization: str = Header("")):
+    # Crisis help comes first and never needs a login: it's fixed text and costs nothing.
     if CRISIS.search(body.message):
         return {"reply": CRISIS_REPLY}
+    check_rate(user_id(authorization))
     return {"reply": safe_reply(answer(body.message))}  # safety net: strip invented names, links, therapist claims
 
 
-app.mount("/", StaticFiles(directory="site", html=True), name="site")
+app.mount("/", StaticFiles(directory="site", html=True), name="site")  # local dev; online, Firebase Hosting serves site/
