@@ -57,7 +57,7 @@
       },
       stress: {
         title: 'Stress check (PSS-10)', questions: PSS_QUESTIONS, score: pssScore, max: 40,
-        options: PSS_OPTIONS, prefix: 'In the last month, how often have you ',
+        options: PSS_OPTIONS, prefix: 'In the last month, how often have you ', bandSuffix: ' stress',
         intro: 'The Perceived Stress Scale (PSS-10). Think about the <strong>last month</strong> and pick how often each applied to you. It\'s a self-check, not a diagnosis.',
         advice: {
           low: 'Your stress level looks low. Keep doing what works for you.',
@@ -92,7 +92,7 @@
       const box = document.getElementById('result');
       box.hidden = false;
       box.innerHTML = (result.selfHarm ? CRISIS : '')
-        + `<h2>Your score: ${result.score} / ${test.max} (${result.band})</h2><p>${test.advice[result.band]}</p>` + '<div class="actions"><button type="button" class="secondary" onclick="print()">Print or save as PDF</button></div>';
+        + `<h2>Your score: ${result.score} / ${test.max} (${result.band}${test.bandSuffix ?? ''})</h2><p>${test.advice[result.band]}</p>` + '<div class="actions"><button type="button" class="secondary" onclick="print()">Print or save as PDF</button></div>';
       enhanceCopy(box);
       box.scrollIntoView({ behavior: 'smooth' });
       await busy(e.submitter, () => save(coll, result)).catch(() => {});
