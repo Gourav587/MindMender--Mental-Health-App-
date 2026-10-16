@@ -207,7 +207,7 @@ function snippet(text, term) {
   const i = text.toLowerCase().indexOf(term);
   const start = Math.max(0, i - 50);
   const piece = (start ? '…' : '') + text.slice(start, start + 140) + '…';
-  return escape(piece).replace(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig'), '<mark>$1</mark>');
+  return escape(piece).replace(new RegExp(`(${RegExp.escape(term)})`, 'ig'), '<mark>$1</mark>');
 }
 
 async function runSearch() {
