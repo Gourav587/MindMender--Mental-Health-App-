@@ -80,9 +80,10 @@
         type: 'line',
         data: {
           labels: rows.map((r) => new Date(r.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
-          datasets: [{ data: rows.map((r) => r.mood), borderColor: color('--accent'), tension: 0 }],
+          datasets: [{ data: rows.map((r) => r.mood), borderColor: color('--accent'), cubicInterpolationMode: 'monotone' }],
         },
         options: {
+          animation: false, // data people read shouldn't move for style
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {

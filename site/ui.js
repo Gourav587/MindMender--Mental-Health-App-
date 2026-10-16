@@ -71,6 +71,8 @@ themeBtn.onclick = () => {
   document.documentElement.dataset.theme = next;
   store.set('theme', next);
   showTheme();
+  // Browser bar colour follows the page (boot.js sets it on load).
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(document.documentElement).backgroundColor);
 };
 showTheme();
 
@@ -83,25 +85,31 @@ toTop.innerHTML = ICON.up;
 toTop.onclick = () => { scrollTo({ top: 0 }); main.focus({ preventScroll: true }); };
 document.body.append(toTop);
 let ticking = false;
+const onScroll = () => {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  progress.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+  toTop.classList.toggle('show', scrollY > 600);
+  header.classList.toggle('scrolled', scrollY > 4); // the header's line only appears once content passes under it
+  ticking = false;
+};
 addEventListener('scroll', () => {
   if (ticking) return;
   ticking = true;
-  requestAnimationFrame(() => {
-    const max = document.documentElement.scrollHeight - innerHeight;
-    progress.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
-    toTop.classList.toggle('show', scrollY > 600);
-    ticking = false;
-  });
+  requestAnimationFrame(onScroll);
 }, { passive: true });
+onScroll();
 
-// ---------- Footer with crisis lines and the page's real last-updated date ----------
+// ---------- Footer with crisis lines and the page's real last-updated date, standing on a row of hills ----------
 const updated = document.querySelector('meta[name="updated"]')?.content;
 document.querySelector('footer')?.remove();
 document.body.insertAdjacentHTML('beforeend', `
-  <footer class="site-footer">
+  <div class="land" aria-hidden="true"><svg viewBox="0 0 1200 72" preserveAspectRatio="none">
+    <path class="hill-far" d="M0 40C150 18 300 22 450 34S750 14 900 26 1100 36 1200 22V72H0Z"/>
+    <path class="hill-near" d="M0 56C200 38 380 44 560 52S900 34 1200 48V72H0Z"/></svg></div>
+  <div class="site-footer-wrap"><footer class="site-footer">
     <p>MindMender is not a substitute for professional care. In crisis? India: Tele-MANAS <a href="tel:14416">14416</a> · KIRAN <a href="tel:18005990019">1800-599-0019</a> · US: <a href="tel:988">988</a> · Elsewhere: <a href="https://findahelpline.com">findahelpline.com</a></p>
     <p><a href="faq.html">FAQ</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms</a>${updated ? ` · Page last updated <time datetime="${updated}">${new Date(updated + 'T00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</time>` : ''}</p>
-  </footer>`);
+  </footer></div>`);
 
 // ---------- Toasts (success / error states) ----------
 const toasts = document.createElement('div');
@@ -114,7 +122,7 @@ export function toast(text, kind = 'ok') {
   if (kind === 'error') el.setAttribute('role', 'alert');
   el.textContent = text;
   toasts.append(el);
-  setTimeout(() => el.remove(), kind === 'error' ? 7000 : 3500);
+  setTimeout(() => { el.classList.add('leaving'); setTimeout(() => el.remove(), 250); }, kind === 'error' ? 7000 : 3500); // eases out, then leaves
 }
 
 // ---------- Confirmation dialog: resolves true only when the person confirms ----------
