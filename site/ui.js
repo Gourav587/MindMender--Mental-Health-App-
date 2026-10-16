@@ -7,7 +7,7 @@ const CONTACT_EMAIL = '';
 const NAV = [['chat.html', 'Chat'], ['checks.html', 'Self-checks'], ['mood.html', 'Mood'], ['relax.html', 'Relax'], ['faq.html', 'FAQ']];
 // Pages the site search reads. Screener questions are drawn by script, so their titles carry the search.
 const SEARCH_PAGES = ['index.html', 'chat.html', 'checks.html', 'screener.html?t=phq9', 'screener.html?t=gad7',
-  'screener.html?t=stress', 'social.html', 'mood.html', 'relax.html', 'faq.html', 'privacy.html', 'terms.html'];
+  'screener.html?t=stress', 'social.html', 'mood.html', 'journal.html', 'relax.html', 'faq.html', 'privacy.html', 'terms.html'];
 const HELPLINES = [['India · Tele-MANAS', '14416'], ['India · KIRAN', '1800-599-0019'], ['US · Suicide & Crisis Lifeline', '988']];
 
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -22,9 +22,10 @@ const ICON = {
 };
 
 // localStorage can throw (private mode, blocked storage); the site must work without it.
-const store = {
+export const store = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* not saved, fine */ } },
+  del: (k) => { try { localStorage.removeItem(k); } catch { /* nothing to remove */ } },
 };
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -259,7 +260,7 @@ if (!store.get('consent')) {
   banner.className = 'cookie';
   banner.setAttribute('role', 'region');
   banner.setAttribute('aria-label', 'Cookie notice');
-  banner.innerHTML = `<p>MindMender stores a few things in your browser to keep you logged in and remember settings like dark mode. With your OK, we also keep the campaign tags of the link you arrived from, so we know which links help people find us. No ads, no third-party trackers. <a href="privacy.html#browser">Privacy Policy</a></p>
+  banner.innerHTML = `<p>MindMender stores a few things in your browser to keep you logged in and remember settings like dark mode. With your OK, we also keep an unsaved journal draft on this device, and the campaign tags of the link you arrived from so we know which links help people find us. No ads, no third-party trackers. <a href="privacy.html#browser">Privacy Policy</a></p>
     <div class="actions"><button type="button" data-consent="all">Allow</button><button type="button" class="secondary" data-consent="essential">Essential only</button></div>`;
   banner.addEventListener('click', (e) => {
     const choice = e.target.dataset.consent;

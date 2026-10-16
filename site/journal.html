@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Journal · MindMender</title>
+  <meta name="description" content="A quiet page to write things down, with gentle prompts if you want them.">
+  <link rel="icon" href="img/logo.png">
+  <meta name="updated" content="2026-10-16">
+  <link rel="stylesheet" href="style.css">
+  <script src="boot.js"></script>
+</head>
+<body>
+  <header></header>
+  <main>
+    <h1>Journal</h1>
+    <p class="muted">Writing things down can take some of the weight out of your head. Entries are saved to your account, and only you can read them on MindMender.</p>
+
+    <form id="journal">
+      <fieldset>
+        <legend>What would you like to write?</legend>
+        <div class="options" id="modes"></div>
+      </fieldset>
+      <label class="prompt" for="text" id="prompt"></label>
+      <div class="paper">
+        <p class="paper-date" id="today"></p>
+        <textarea id="text" spellcheck="false" maxlength="20000"></textarea>
+      </div>
+      <div class="actions">
+        <button id="save">Save entry</button>
+        <button type="button" id="another" class="secondary">Another prompt</button>
+      </div>
+    </form>
+
+    <div class="card">
+      <h2>Past entries</h2>
+      <ul class="entries" id="past"></ul>
+    </div>
+  </main>
+  <script type="module">
+    import { requireLogin, save, history, remove, LOADING, LOAD_ERROR } from './app.js';
+    import { busy, confirmDialog, toast, store } from './ui.js';
+    const user = await requireLogin();
+
+    // Our own prompts. A template prefills the page and is replaced when you switch modes, unless you've written over it.
+    const MODES = {
+      free: { label: 'Free write', prompts: [
+        'Write whatever is on your mind. It doesn’t have to make sense.',
+        'How did today actually go?',
+        'What’s taking up the most space in your head right now?',
+      ] },
+      gratitude: { label: 'Gratitude', template: '1. \n2. \n3. ', prompts: [
+        'Three good things from today, big or small, and why they happened.',
+        'Who made your life a little easier lately? What did they do?',
+        'Something you have that you usually don’t notice.',
+      ] },
+      dump: { label: 'Brain dump', prompts: [
+        'Empty your head onto the page: tasks, worries, half thoughts, in any order. Sorting can wait.',
+        'Everything you’re trying to remember right now, so you can stop holding it.',
+      ] },
+      worry: { label: 'Worry check', template: 'What I’m worried about:\n\nThe worst that could happen:\n\nHow likely that really is:\n\nOne small thing I can do about it:\n', prompts: [
+        'Pick one worry and look at it slowly, one line at a time.',
+      ] },
+      letter: { label: 'Letter to myself', template: 'Dear me,\n', prompts: [
+        'Write to yourself the way you would write to a good friend going through the same thing.',
+        'Write to yourself a year from now. What do you hope has changed?',
+        'Write to a younger you. What would you want them to know?',
+      ] },
+      body: { label: 'Feelings and body', prompts: [
+        'Name what you’re feeling, even if it’s mixed. Where do you notice it in your body?',
+        'Scan slowly from head to toe. Where are you holding tension? What might it be about?',
+      ] },
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const form = $('journal');
+    const text = $('text');
+    const past = $('past');
+    const DRAFT = 'journal-draft:' + user.uid;
+    const draftsAllowed = () => store.get('consent') === 'all'; // your choice on the cookie notice
+    let mode, promptIndex;
+
+    $('today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    $('modes').innerHTML = Object.entries(MODES).map(([key, m]) =>
+      `<label><input type="radio" name="mode" value="${key}"><span>${m.label}</span></label>`).join('');
+
+    const untouched = () => !text.value.trim() || text.value === (MODES[mode]?.template ?? '');
+    function setMode(key, i = 0) {
+      const fresh = untouched();
+      mode = key;
+      promptIndex = i % MODES[key].prompts.length;
+      form.mode.value = key;
+      $('prompt').textContent = MODES[key].prompts[promptIndex];
+      if (fresh) text.value = MODES[key].template ?? '';
+    }
+    function keepDraft() {
+      if (draftsAllowed()) store.set(DRAFT, JSON.stringify({ mode, promptIndex, text: text.value }));
+    }
+
+    let draft;
+    try { draft = draftsAllowed() && JSON.parse(store.get(DRAFT)); } catch { /* no draft */ }
+    if (draft && MODES[draft.mode]) {
+      setMode(draft.mode, draft.promptIndex);
+      text.value = draft.text;
+    } else setMode('free');
+
+    form.addEventListener('change', (e) => { if (e.target.name === 'mode') { setMode(e.target.value); keepDraft(); } });
+    $('another').onclick = () => { setMode(mode, promptIndex + 1); keepDraft(); };
+    text.addEventListener('input', keepDraft);
+    // Without a browser draft, closing the tab would lose the writing, so the browser asks first.
+    addEventListener('beforeunload', (e) => { if (!untouched() && !draftsAllowed()) e.preventDefault(); });
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      if (untouched()) { text.focus(); toast('Write something first, then save.', 'error'); return; }
+      try {
+        await busy(e.submitter, () => save('journal', { text: text.value.trim(), mode, prompt: MODES[mode].prompts[promptIndex] }));
+      } catch { return; }
+      store.del(DRAFT);
+      text.value = '';
+      setMode(mode);
+      showPast();
+    };
+
+    function entry(r) {
+      const li = document.createElement('li');
+      li.innerHTML = '<details><summary></summary><p class="entry-text"></p><button type="button" class="secondary">Delete</button></details>';
+      const date = new Date(r.ts).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      li.querySelector('summary').textContent = `${date} · ${MODES[r.mode]?.label ?? 'Entry'}`;
+      li.querySelector('.entry-text').textContent = r.text;
+      li.querySelector('button').onclick = async (e) => {
+        if (!(await confirmDialog('Delete this entry? This can’t be undone.', 'Delete'))) return;
+        try { await busy(e.target, () => remove('journal', r.id)); } catch { return; }
+        showPast();
+      };
+      return li;
+    }
+
+    async function showPast() {
+      past.innerHTML = LOADING;
+      let rows;
+      try { rows = await history('journal', 20); } catch { past.innerHTML = LOAD_ERROR; return; }
+      if (!rows.length) { past.innerHTML = '<li class="muted">No entries yet. What you save shows up here.</li>'; return; }
+      past.replaceChildren(...rows.map(entry));
+    }
+    showPast();
+  </script>
+</body>
+</html>

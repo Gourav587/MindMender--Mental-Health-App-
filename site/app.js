@@ -1,7 +1,7 @@
 import { toast, confirmDialog, attribution } from './ui.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Public web config; access is enforced by firestore.rules.
 const app = initializeApp({
@@ -52,6 +52,17 @@ export async function save(coll, data) {
     return ref;
   } catch (err) {
     toast('Couldn’t save this. Check your connection and try again.', 'error');
+    throw err;
+  }
+}
+
+export async function remove(coll, id) {
+  const user = await requireLogin();
+  try {
+    await deleteDoc(doc(db, 'users', user.uid, coll, id));
+    toast('Deleted');
+  } catch (err) {
+    toast('Couldn’t delete this. Check your connection and try again.', 'error');
     throw err;
   }
 }
