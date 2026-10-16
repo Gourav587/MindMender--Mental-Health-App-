@@ -1,0 +1,10 @@
+# What gcloud uploads to Cloud Build. Without this file it uses .gitignore, which leaves out models/.
+.git
+.venv/
+.env
+.archify/
+__pycache__/
+CHANGES.txt
+separated_conversation.csv
+models/*
+!models/chat/

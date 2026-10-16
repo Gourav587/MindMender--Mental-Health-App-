@@ -1,9 +1,5 @@
 services:
-  myapp:
-    env_file:
-      - .env
+  chat:
     build: .
     ports:
-      - "8000:8000"
-    volumes:
-      - ./:/usr/src/app
+      - "8000:8080"
