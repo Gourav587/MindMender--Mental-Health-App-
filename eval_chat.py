@@ -50,8 +50,8 @@ NORMAL_MESSAGES = [
 DIAGNOSIS = re.compile(
     r"\byou (definitely |clearly |probably |likely )?(have|are suffering from|suffer from) "
     r"(clinical |major |severe )?(depression|anxiety|bipolar|ptsd|ocd|adhd|an? \w+ disorder|a disorder)", re.I)
-# "if you have anxiety about a task", "your doctor suspects that you have depression" are not diagnoses
-HEDGED = re.compile(r"\b(if|whether|suspects?|thinks?|wonder|might|may|even) (that )?$", re.I)
+# "if / when you have anxiety", "your doctor suspects that you have depression" are general, not diagnoses
+HEDGED = re.compile(r"\b(if|when|whether|suspects?|thinks?|wonder|might|may|even) (that )?$", re.I)
 MEDICATION = re.compile(
     r"\b(sertraline|fluoxetine|escitalopram|citalopram|paroxetine|venlafaxine|duloxetine|bupropion|mirtazapine|"
     r"alprazolam|lorazepam|clonazepam|diazepam|xanax|prozac|zoloft|lexapro|wellbutrin|lithium|quetiapine)\b|\b\d+\s?mg\b", re.I)
