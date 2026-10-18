@@ -6,3 +6,6 @@ models/
 eval-out/
 eval_results.json
 .firebase/
+.archify/
+CHANGES.txt
+FEATURES.txt
