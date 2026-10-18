@@ -1,5 +1,7 @@
 # MindMender
 
+**Live site: [mindmender-dea8d.web.app](https://mindmender-dea8d.web.app)**
+
 A mental health website where you can:
 
 - **Chat** with a supportive AI listener (our own fine-tuned model), with crisis detection, a safety filter on replies, and a per-user rate limit for signed-in users
