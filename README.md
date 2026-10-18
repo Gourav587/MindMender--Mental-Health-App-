@@ -1,6 +1,6 @@
 # MindMender
 
-**Live site: [mindmender-dea8d.web.app](https://mindmender-dea8d.web.app)**
+**Live site: [mindmender-care.web.app](https://mindmender-care.web.app)**
 
 A mental health website where you can:
 
