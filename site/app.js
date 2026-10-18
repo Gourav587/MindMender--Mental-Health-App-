@@ -9,7 +9,7 @@ const app = initializeApp({
   appId: '1:405768781307:web:40586f1a31d05d3fc89f5e',
   messagingSenderId: '405768781307',
   projectId: 'mindmender-dea8d',
-  authDomain: 'mindmender-dea8d.firebaseapp.com',
+  authDomain: 'mindmender-care.web.app', // our hosting site; serves the Google sign-in pages
   storageBucket: 'mindmender-dea8d.firebasestorage.app',
 });
 export const auth = getAuth(app);
