@@ -59,22 +59,26 @@ const setMenu = (open) => {
 menuBtn.onclick = () => setMenu(!header.classList.contains('open'));
 header.querySelector('nav').addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
 
+// Light by default. One saved choice for the whole site: the toggle on any page changes every page, including
+// other open tabs ("storage" event) and pages brought back with the Back button ("pageshow").
 const themeBtn = document.getElementById('theme-btn');
-const isDark = () => (document.documentElement.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
-const showTheme = () => {
+const isDark = () => document.documentElement.dataset.theme === 'dark';
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
   themeBtn.setAttribute('aria-pressed', isDark());
   themeBtn.innerHTML = isDark() ? ICON.sun : ICON.moon;
   themeBtn.title = isDark() ? 'Switch to light mode' : 'Switch to dark mode';
-};
-themeBtn.onclick = () => {
-  const next = isDark() ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  store.set('theme', next);
-  showTheme();
   // Browser bar colour follows the page (boot.js sets it on load).
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(document.documentElement).backgroundColor);
+}
+themeBtn.onclick = () => {
+  const next = isDark() ? 'light' : 'dark';
+  store.set('theme', next);
+  applyTheme(next);
 };
-showTheme();
+addEventListener('storage', (e) => { if (e.key === 'theme') applyTheme(e.newValue); });
+addEventListener('pageshow', () => applyTheme(store.get('theme')));
+applyTheme(store.get('theme'));
 
 const progress = header.querySelector('.progress');
 const toTop = document.createElement('button');
